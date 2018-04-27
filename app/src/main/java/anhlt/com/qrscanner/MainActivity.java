@@ -1,29 +1,52 @@
 package anhlt.com.qrscanner;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.widget.TextView;
+import android.util.Log;
 
-public class MainActivity extends AppCompatActivity {
+import com.google.zxing.Result;
 
-    // Used to load the 'native-lib' library on application startup.
-    static {
-        System.loadLibrary("native-lib");
-    }
+import java.security.Permission;
+
+import me.dm7.barcodescanner.zxing.ZXingScannerView;
+
+public class MainActivity extends AppCompatActivity implements ZXingScannerView.ResultHandler {
+    private static final String TAG = "MainActivity";
+    private ZXingScannerView mScannerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-
-        // Example of a call to a native method
-        TextView tv = (TextView) findViewById(R.id.sample_text);
-        tv.setText(stringFromJNI());
+        mScannerView = new ZXingScannerView(this);
+        setContentView(mScannerView);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (checkSelfPermission(PackageManager.FEATURE_CAMERA) != PackageManager.PERMISSION_GRANTED)
+                requestPermissions(new String[]{Manifest.permission.CAMERA}, 0);
+        }
     }
 
-    /**
-     * A native method that is implemented by the 'native-lib' native library,
-     * which is packaged with this application.
-     */
-    public native String stringFromJNI();
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mScannerView.setResultHandler(this);
+        mScannerView.startCamera();
+}
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mScannerView.stopCamera();
+    }
+
+    //ZXingScannerView.ResultHandler_
+    @Override
+    public void handleResult(Result result) {
+        Log.v(TAG, result.getText());
+        Log.v(TAG, result.getBarcodeFormat().toString());
+        mScannerView.resumeCameraPreview(this);
+    }
+    //_ZXingScannerView.ResultHandler
 }
