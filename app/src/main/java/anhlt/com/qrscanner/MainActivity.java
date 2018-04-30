@@ -1,16 +1,14 @@
 package anhlt.com.qrscanner;
 
-import android.Manifest;
 import android.content.pm.PackageManager;
-import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 
 import com.google.zxing.Result;
+import com.google.zxing.ResultMetadataType;
 
-import java.security.Permission;
-
+import anhlt.com.qrscanner.Utilities.PermissionUtil;
 import me.dm7.barcodescanner.zxing.ZXingScannerView;
 
 public class MainActivity extends AppCompatActivity implements ZXingScannerView.ResultHandler {
@@ -20,12 +18,10 @@ public class MainActivity extends AppCompatActivity implements ZXingScannerView.
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mScannerView = new ZXingScannerView(this);
-        setContentView(mScannerView);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (checkSelfPermission(PackageManager.FEATURE_CAMERA) != PackageManager.PERMISSION_GRANTED)
-                requestPermissions(new String[]{Manifest.permission.CAMERA}, 0);
-        }
+        setContentView(R.layout.activity_main);
+        mScannerView = findViewById(R.id.vScanner);
+        String requiredPermissions[] = new String[]{PackageManager.FEATURE_CAMERA};
+        PermissionUtil.requestPermissions(this, requiredPermissions, 0);
     }
 
     @Override
@@ -33,7 +29,7 @@ public class MainActivity extends AppCompatActivity implements ZXingScannerView.
         super.onResume();
         mScannerView.setResultHandler(this);
         mScannerView.startCamera();
-}
+    }
 
     @Override
     protected void onPause() {
@@ -46,7 +42,9 @@ public class MainActivity extends AppCompatActivity implements ZXingScannerView.
     public void handleResult(Result result) {
         Log.v(TAG, result.getText());
         Log.v(TAG, result.getBarcodeFormat().toString());
-        mScannerView.resumeCameraPreview(this);
+        ResultDialog dialog = ResultDialog.newInstance(result.getText(), result.getBarcodeFormat().toString());
+        dialog.show(getSupportFragmentManager(), "");
+        mScannerView.stopCamera();
     }
     //_ZXingScannerView.ResultHandler
 }
