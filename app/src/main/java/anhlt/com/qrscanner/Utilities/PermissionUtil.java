@@ -25,6 +25,7 @@ public class PermissionUtil {
                 missingPermissions.add(permission);
             }
         }
-        activity.requestPermissions(missingPermissions.toArray(new String[missingPermissions.size()]), requestCode);
+        if (missingPermissions.size() != 0)
+            activity.requestPermissions(missingPermissions.toArray(new String[missingPermissions.size()]), requestCode);
     }
 }

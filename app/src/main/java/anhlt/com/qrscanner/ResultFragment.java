@@ -52,6 +52,7 @@ public class ResultFragment extends BaseFragment implements View.OnClickListener
         tvResult = view.findViewById(R.id.tv_result);
         tvResult.setText(mResult);
         btnProcess = view.findViewById(R.id.btn_process);
+        view.findViewById(R.id.btn_cancel).setOnClickListener(this);
         btnProcess.setOnClickListener(this);
         if (StringUtil.isLink(mResult)) {
             btnProcess.setText("Go to link");
@@ -69,6 +70,8 @@ public class ResultFragment extends BaseFragment implements View.OnClickListener
                 Uri uri = Uri.parse("http://www.google.com/#q=" + tvResult.getText().toString());
                 startActivity(new Intent(Intent.ACTION_VIEW, uri));
             }
+        } else if (v.getId() == R.id.btn_cancel) {
+            navigationManager.goBack();
         }
     }
     //_OnClickListener

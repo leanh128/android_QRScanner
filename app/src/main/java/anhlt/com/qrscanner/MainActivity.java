@@ -16,11 +16,19 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        navigationManager = new NavigationManager(getSupportFragmentManager(), R.id.fragment_container);
+        navigationManager = new NavigationManager(this, R.id.fragment_container);
         setContentView(R.layout.activity_main);
         String requiredPermissions[] = new String[]{Manifest.permission.CAMERA};
         PermissionUtil.requestPermissions(this, requiredPermissions, REQUEST_CODE_CAMERA);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         navigationManager.addPage(new ScanViewFragment());
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        if (navigationManager.getActiveFragment() instanceof ScanViewFragment) {
+            finish();
+        }
     }
 }
