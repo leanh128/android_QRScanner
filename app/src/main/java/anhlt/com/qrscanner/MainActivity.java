@@ -26,9 +26,6 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        super.onBackPressed();
-        if (navigationManager.getActiveFragment() instanceof ScanViewFragment) {
-            finish();
-        }
+        navigationManager.goBack();
     }
 }

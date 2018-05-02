@@ -4,8 +4,10 @@ import android.support.annotation.IdRes;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 
 public class NavigationManager {
+    public static final String TAG = "NavigationManager";
     public FragmentManager fragmentManager;
     public int container;
     public AppCompatActivity activity;
@@ -21,14 +23,17 @@ public class NavigationManager {
                 .addToBackStack(fragment.toString())
                 .replace(container, fragment)
                 .commit();
+        Log.d(TAG, "addPage: " + fragment.toString());
     }
 
     public Fragment getActiveFragment() {
-        return fragmentManager.findFragmentById(container);
+        Fragment fragment = fragmentManager.findFragmentById(container);
+        Log.d(TAG, "getActiveFragment: " + fragment.toString());
+        return fragment;
     }
 
-    public void goBack(){
-        if(fragmentManager.getBackStackEntryCount() == 1){
+    public void goBack() {
+        if (fragmentManager.getBackStackEntryCount() <= 1) {
             activity.finish();
         }
         fragmentManager.popBackStackImmediate();

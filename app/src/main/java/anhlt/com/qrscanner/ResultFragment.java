@@ -1,5 +1,6 @@
 package anhlt.com.qrscanner;
 
+import android.app.SearchManager;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -67,8 +68,9 @@ public class ResultFragment extends BaseFragment implements View.OnClickListener
             if (btnProcess.getText().equals("Go to link")) {
                 startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(tvResult.getText().toString())));
             } else {
-                Uri uri = Uri.parse("http://www.google.com/#q=" + tvResult.getText().toString());
-                startActivity(new Intent(Intent.ACTION_VIEW, uri));
+                Intent intent = new Intent(Intent.ACTION_WEB_SEARCH);
+                intent.putExtra(SearchManager.QUERY,tvResult.getText().toString());
+                startActivity(intent);
             }
         } else if (v.getId() == R.id.btn_cancel) {
             navigationManager.goBack();

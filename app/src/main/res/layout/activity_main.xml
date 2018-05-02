@@ -9,7 +9,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:text="Hello World!" />
+        android:textColor="#f00"
+        android:text="*Be careful \n Not all links are safe" />
 
     <FrameLayout
         android:id="@+id/fragment_container"
