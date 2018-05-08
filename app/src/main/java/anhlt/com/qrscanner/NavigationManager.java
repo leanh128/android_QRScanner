@@ -1,10 +1,13 @@
 package anhlt.com.qrscanner;
 
+import android.os.Handler;
 import android.support.annotation.IdRes;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.widget.Toast;
+
 
 public class NavigationManager {
     public static final String TAG = "NavigationManager";
@@ -34,8 +37,16 @@ public class NavigationManager {
 
     public void goBack() {
         if (fragmentManager.getBackStackEntryCount() <= 1) {
-            activity.finish();
+            Toast.makeText(activity, "Bye", Toast.LENGTH_SHORT).show();
+            new Handler().postDelayed(new Runnable() {
+
+                public void run() {
+                    activity.finish();
+                }
+            },500);
+
+        } else {
+            fragmentManager.popBackStackImmediate();
         }
-        fragmentManager.popBackStackImmediate();
     }
 }
