@@ -1,4 +1,4 @@
-package anhlt.com.qrscanner.Utilities;
+package com.vn.qrscanner.Utilities;
 
 import android.content.Context;
 import android.content.pm.PackageManager;

@@ -1,4 +1,4 @@
-package anhlt.com.qrscanner.bases;
+package com.vn.qrscanner.bases;
 
 import android.os.Bundle;
 import android.support.annotation.LayoutRes;
@@ -9,8 +9,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import anhlt.com.qrscanner.MainActivity;
-import anhlt.com.qrscanner.NavigationManager;
+import com.vn.qrscanner.MainActivity;
+import com.vn.qrscanner.NavigationManager;
 
 public abstract class BaseFragment extends Fragment {
     protected NavigationManager navigationManager;

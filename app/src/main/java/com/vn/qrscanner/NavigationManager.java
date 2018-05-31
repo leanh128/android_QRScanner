@@ -1,4 +1,4 @@
-package anhlt.com.qrscanner;
+package com.vn.qrscanner;
 
 import android.os.Handler;
 import android.support.annotation.IdRes;

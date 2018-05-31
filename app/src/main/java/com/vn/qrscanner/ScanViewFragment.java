@@ -1,5 +1,7 @@
-package anhlt.com.qrscanner;
+package com.vn.qrscanner;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -8,7 +10,11 @@ import android.view.View;
 
 import com.google.zxing.Result;
 
-import anhlt.com.qrscanner.bases.BaseFragment;
+import com.google.zxing.ResultMetadataType;
+import com.vn.qrscanner.bases.BaseFragment;
+
+import java.io.ByteArrayOutputStream;
+
 import me.dm7.barcodescanner.zxing.ZXingScannerView;
 
 public class ScanViewFragment extends BaseFragment implements ZXingScannerView.ResultHandler {
@@ -41,10 +47,10 @@ public class ScanViewFragment extends BaseFragment implements ZXingScannerView.R
 
     //ZXingScannerView.ResultHandler_
     @Override
+
     public void handleResult(Result result) {
-        Log.v(TAG, result.getText());
-        Log.v(TAG, result.getBarcodeFormat().toString());
-        ResultFragment fragment = ResultFragment.newInstance(result.getText(), result.getBarcodeFormat().toString());
+        String country = (String) result.getResultMetadata().get(ResultMetadataType.POSSIBLE_COUNTRY);
+        ResultFragment fragment = ResultFragment.newInstance(result.getText(), result.getBarcodeFormat().toString(),country );
         navigationManager.addPage(fragment);
         mScannerView.stopCamera();
     }

@@ -1,4 +1,4 @@
-package anhlt.com.qrscanner;
+package com.vn.qrscanner;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
@@ -7,7 +7,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.WindowManager;
 
-import anhlt.com.qrscanner.Utilities.PermissionUtil;
+import com.google.android.gms.ads.MobileAds;
+import com.vn.qrscanner.Utilities.PermissionUtil;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
@@ -18,6 +19,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        initializeAds();
         navigationManager = new NavigationManager(this, R.id.fragment_container);
         String requiredPermissions[] = new String[]{Manifest.permission.CAMERA};
         setContentView(R.layout.activity_main);
@@ -43,6 +45,10 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public void initializeAds(){
+        // TODO: 6/1/2018 initialize with ads id 
+        MobileAds.initialize(this);
+    }
     @Override
     public void onBackPressed() {
         navigationManager.goBack();

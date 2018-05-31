@@ -1,4 +1,4 @@
-package anhlt.com.qrscanner.Utilities;
+package com.vn.qrscanner.Utilities;
 
 import java.util.regex.Pattern;
 
