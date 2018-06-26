@@ -46,7 +46,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void initializeAds(){
-        // TODO: 6/1/2018 initialize with ads id 
         MobileAds.initialize(this);
     }
     @Override

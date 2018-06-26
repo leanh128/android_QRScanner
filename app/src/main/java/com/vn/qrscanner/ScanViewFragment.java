@@ -49,7 +49,10 @@ public class ScanViewFragment extends BaseFragment implements ZXingScannerView.R
     @Override
 
     public void handleResult(Result result) {
-        String country = (String) result.getResultMetadata().get(ResultMetadataType.POSSIBLE_COUNTRY);
+        String country= "";
+        if(result.getResultMetadata()!= null){
+            country = (String) result.getResultMetadata().get(ResultMetadataType.POSSIBLE_COUNTRY);
+        }
         ResultFragment fragment = ResultFragment.newInstance(result.getText(), result.getBarcodeFormat().toString(),country );
         navigationManager.addPage(fragment);
         mScannerView.stopCamera();
