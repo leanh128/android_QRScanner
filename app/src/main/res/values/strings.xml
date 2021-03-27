@@ -1,6 +1,11 @@
 <resources>
-    <string name="app_name">QR Scanner</string>
+    <string name="app_name">CodeLens</string>
     <string name="title_result">Result</string>
     <string name="button_search">Search</string>
     <string name="button_back">Back</string>
+    <string name="button_open_link">Open link</string>
+    <string name="title_scan">scanning…</string>
+    <string name="button_generate">generate</string>
+    <string name="title_qr_generator">QR Generator</string>
+    <string name="toast_empty_content">Nothing to generate</string>
 </resources>

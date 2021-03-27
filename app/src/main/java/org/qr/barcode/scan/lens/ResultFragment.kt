@@ -1,91 +1,83 @@
-package com.vn.qrscanner;
+package org.qr.barcode.scan.lens
 
-import android.app.SearchManager;
-import android.content.Intent;
-import android.net.Uri;
-import android.os.Bundle;
-import android.text.TextUtils;
-import android.view.View;
-import android.widget.Button;
-import android.widget.TextView;
+import android.annotation.SuppressLint
+import android.app.SearchManager
+import android.content.Intent
+import android.net.Uri
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.core.os.bundleOf
+import androidx.fragment.app.Fragment
+import org.qr.barcode.scan.lens.databinding.FragmentResultBinding
+import org.qr.barcode.scan.lens.extensions.isLink
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+class ResultFragment : Fragment() {
+    private var result: String = ""
+    private var country: String = ""
+    private lateinit var binding: FragmentResultBinding
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        if (arguments != null) {
+            result = arguments!!.getString(ARG_RESULT, "")
+            country = arguments!!.getString(ARG_COUNTRY, "")
 
-import com.vn.qrscanner.bases.BaseFragment;
-import com.vn.qrscanner.Utilities.StringUtil;
-
-public class ResultFragment extends BaseFragment implements View.OnClickListener {
-    public static final String TAG = "ResultFragment";
-    public static final String ARG_RESULT = "scan.result";
-    public static final String ARG_CODE_TYPE = "code.type";
-    public static final String ARG_COUNTRY = "country";
-
-    private String mResult, mCodeType, mCountry;
-
-    private TextView tvResult;
-    private TextView btnProcess;
-
-    public static ResultFragment newInstance(String result, String codeType, String country) {
-
-        Bundle args = new Bundle();
-        args.putString(ARG_RESULT, result);
-        args.putString(ARG_CODE_TYPE, codeType);
-        args.putString(ARG_COUNTRY, country);
-        ResultFragment fragment = new ResultFragment();
-        fragment.setArguments(args);
-        return fragment;
-    }
-
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mResult = getArguments().getString(ARG_RESULT);
-            mCodeType = getArguments().getString(ARG_CODE_TYPE);
-            mCountry = getArguments().getString(ARG_COUNTRY, "");
         }
     }
 
-    @Override
-    public int getLayoutResource() {
-        return R.layout.fragment_result;
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+        binding = FragmentResultBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
-    @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-        tvResult = view.findViewById(R.id.tv_result);
-        String displayText = mResult;
-        if (!TextUtils.isEmpty(mCountry)) {
-            displayText = mCountry + " - " + mResult;
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
+        (activity as? MainActivity)?.setScreenTitle(getString(R.string.title_result))
+    }
+
+    @SuppressLint("SetTextI18n")
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        binding.layoutResult.setOnClickListener { handleResultAction() }
+        binding.tvResult.text = "${if (country.isEmpty()) "" else "$country - "}$result"
+
+        binding.btnAction.run {
+            text = getString(if (result.isLink()) R.string.button_open_link else R.string.button_search)
+            setOnClickListener { handleResultAction() }
         }
-        tvResult.setText(displayText);
-        btnProcess = view.findViewById(R.id.btn_process);
-        view.findViewById(R.id.btn_cancel).setOnClickListener(this);
-        btnProcess.setOnClickListener(this);
 
-        if (StringUtil.isLink(mResult)) {
-            btnProcess.setText("Go to link");
-        } else btnProcess.setText("Search");
-
-    }
-
-    //OnClickListener_
-    @Override
-    public void onClick(View v) {
-        if (v.getId() == R.id.btn_process) {
-            if (btnProcess.getText().equals("Go to link")) {
-                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(tvResult.getText().toString())));
-            } else {
-                Intent intent = new Intent(Intent.ACTION_WEB_SEARCH);
-                intent.putExtra(SearchManager.QUERY, tvResult.getText().toString());
-                startActivity(intent);
-            }
-        } else if (v.getId() == R.id.btn_cancel) {
-            navigationManager.goBack();
+        binding.btnBack.run {
+            setOnClickListener { backToScan() }
         }
     }
-    //_OnClickListener
+
+    private fun backToScan() {
+        (activity as? MainActivity)?.openScanView()
+    }
+
+    private fun handleResultAction() {
+        result.takeIf { it.isNotEmpty() }
+                ?.run {
+                    startActivity(Intent().apply {
+                        action = if (isLink()) Intent.ACTION_VIEW else Intent.ACTION_WEB_SEARCH
+                        if (isLink())
+                            data = Uri.parse(binding.tvResult.text.toString())
+                        else putExtra(SearchManager.QUERY, binding.tvResult.text.toString())
+                    })
+                }
+    }
+
+    companion object {
+        const val TAG = "ResultFragment"
+        const val ARG_RESULT = "scan.result"
+        const val ARG_CODE_TYPE = "code.type"
+        const val ARG_COUNTRY = "country"
+        fun newInstance(result: String?, country: String?) = ResultFragment().apply {
+            arguments = bundleOf(
+                    ARG_RESULT to result,
+                    ARG_COUNTRY to country
+            )
+        }
+    }
 }
-

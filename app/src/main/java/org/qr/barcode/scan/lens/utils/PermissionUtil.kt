@@ -1,31 +1,24 @@
-package com.vn.qrscanner.Utilities;
+package org.qr.barcode.scan.lens.utils
 
-import android.content.Context;
-import android.content.pm.PackageManager;
-import android.os.Build;
-import androidx.appcompat.app.AppCompatActivity;
+import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.appcompat.app.AppCompatActivity
+import java.util.ArrayList
 
-import java.util.ArrayList;
-
-public class PermissionUtil {
-
-
-    public static boolean verifyPermission(Context context, String permission) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return true;
-        return context.checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED;
+object PermissionUtil {
+    fun verifyPermission(context: Context, permission: String?): Boolean {
+        return if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) true else context.checkSelfPermission(permission!!) == PackageManager.PERMISSION_GRANTED
     }
 
-
-    public static void requestPermissions(AppCompatActivity activity, String[] permissions, int requestCode) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return;
-
-        ArrayList<String> missingPermissions = new ArrayList<>();
-        for (String permission : permissions) {
+    fun requestPermissions(activity: AppCompatActivity, permissions: Array<String>, requestCode: Int) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return
+        val missingPermissions = ArrayList<String>()
+        for (permission in permissions) {
             if (!verifyPermission(activity, permission)) {
-                missingPermissions.add(permission);
+                missingPermissions.add(permission)
             }
         }
-        if (missingPermissions.size() != 0)
-            activity.requestPermissions(missingPermissions.toArray(new String[missingPermissions.size()]), requestCode);
+        if (missingPermissions.size != 0) activity.requestPermissions(missingPermissions.toTypedArray(), requestCode)
     }
 }

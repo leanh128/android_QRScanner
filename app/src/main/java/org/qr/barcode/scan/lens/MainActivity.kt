@@ -1,67 +1,119 @@
-package com.vn.qrscanner;
+package org.qr.barcode.scan.lens
 
-import android.Manifest;
-import android.content.pm.PackageManager;
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Bundle
+import android.view.WindowManager
+import androidx.appcompat.app.AppCompatActivity
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.MobileAds
+import org.qr.barcode.scan.lens.databinding.ActivityMainBinding
+import org.qr.barcode.scan.lens.utils.PermissionUtil
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
+class MainActivity : AppCompatActivity() {
 
-import android.os.Bundle;
-import android.view.WindowManager;
+    private lateinit var binding: ActivityMainBinding
 
-import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.AdView;
-import com.google.android.gms.ads.MobileAds;
-import com.vn.qrscanner.Utilities.PermissionUtil;
-
-public class MainActivity extends AppCompatActivity {
-    private static final String TAG = "MainActivity";
-    public NavigationManager navigationManager;
-
-    public static final int REQUEST_CODE_CAMERA = 123;
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        navigationManager = new NavigationManager(this, R.id.fragment_container);
-        String[] requiredPermissions = new String[]{Manifest.permission.CAMERA};
-        setContentView(R.layout.activity_main);
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        val requiredPermissions = arrayOf(Manifest.permission.CAMERA)
+        setContentView(R.layout.activity_main)
         if (!PermissionUtil.verifyPermission(this, Manifest.permission.CAMERA)) {
-            PermissionUtil.requestPermissions(this, requiredPermissions, REQUEST_CODE_CAMERA);
+            PermissionUtil.requestPermissions(this, requiredPermissions, REQUEST_CODE_CAMERA)
         } else {
-            init();
+            init()
         }
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_CODE_CAMERA) {
-            for (int i = 0; i < permissions.length; i++) {
+            for (i in permissions.indices) {
                 if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {
-                    finish();
-                    return;
+                    finish()
+                    return
                 }
             }
-            init();
+            init()
         }
     }
 
-    private void init() {
-        MobileAds.initialize(this);
-        AdView adView = findViewById(R.id.adView);
-        adView.loadAd(new AdRequest.Builder().build());
-        openScanView();
+
+    private fun init() {
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        MobileAds.initialize(this)
+        binding.adView.loadAd(AdRequest.Builder().build())
+        binding.imgGenerateQr.setOnClickListener {
+            openQRGenerator()
+        }
+        openScanView()
+    }
+
+    override fun onBackPressed() {
+        if (supportFragmentManager.findFragmentById(binding.fragmentContainerScanner.id) !is ScanFragment) {
+            openScanView()
+        } else {
+            super.onBackPressed()
+        }
+    }
+
+    fun openScanView() {
+        if (supportFragmentManager.findFragmentById(binding.fragmentContainerScanner.id) is ScanFragment)
+            return
+        supportFragmentManager.findFragmentById(binding.fragmentContainerText.id)?.let {
+            supportFragmentManager.beginTransaction().remove(it).commitNowAllowingStateLoss()
+        }
+        supportFragmentManager.beginTransaction()
+                .replace(
+                        binding.fragmentContainerScanner.id,
+                        ScanFragment()
+                )
+                .commitNowAllowingStateLoss()
+    }
+
+    fun showResult(result: String, country: String = "") {
+        if (supportFragmentManager.findFragmentById(binding.fragmentContainerText.id) is ResultFragment)
+            return
+        supportFragmentManager.findFragmentById(binding.fragmentContainerScanner.id)?.let {
+            supportFragmentManager.beginTransaction().remove(it).commitNowAllowingStateLoss()
+        }
+        supportFragmentManager.beginTransaction()
+                .replace(
+                        binding.fragmentContainerText.id,
+                        ResultFragment.newInstance(result, country))
+                .commitNowAllowingStateLoss()
+    }
+
+    private fun openQRGenerator() {
+        if (supportFragmentManager.findFragmentById(binding.fragmentContainerText.id) is QRGeneratorFragment)
+            return
+        supportFragmentManager.findFragmentById(binding.fragmentContainerScanner.id)?.let {
+            supportFragmentManager.beginTransaction().remove(it).commitNowAllowingStateLoss()
+        }
+        supportFragmentManager.beginTransaction()
+                .replace(
+                        binding.fragmentContainerText.id,
+                        QRGeneratorFragment())
+                .commitNowAllowingStateLoss()
+    }
+
+    fun setScreenTitle(title: String) {
+        binding.tvScreenTitle.text = title
     }
 
 
-    @Override
-    public void onBackPressed() {
-        navigationManager.goBack();
+    override fun onStop() {
+        super.onStop()
+        window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
 
-    public void openScanView() {
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        navigationManager.addPage(new ScanViewFragment());
+    fun scrollToBottom() {
+        binding.scrollView.smoothScrollTo(0, binding.scrollView.bottom)
+    }
+
+    companion object {
+        private const val TAG = "MainActivity"
+        const val REQUEST_CODE_CAMERA = 123
     }
 }
