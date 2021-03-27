@@ -2,6 +2,7 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
     android:background="@color/colorPrimary">
 
     <LinearLayout
@@ -14,34 +15,55 @@
             android:id="@+id/et_content"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="start|top"
-            android:textColor="#fff"
             android:layout_margin="8dp"
             android:background="@color/textBackground"
             android:cursorVisible="true"
+            android:gravity="start|top"
+            android:minLines="6"
             android:padding="8dp"
-            android:minLines="6" />
+            android:textColorHint="#afff"
+            android:hint="@string/hint_qr_code_generate_hint"
+            android:textColor="#fff" />
 
         <Button
             android:id="@+id/btn_generate"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="#fff"
             android:layout_gravity="end"
             android:layout_marginVertical="12dp"
             android:layout_marginEnd="24dp"
             android:background="@drawable/bg_button_action"
             android:paddingHorizontal="32dp"
             android:paddingVertical="16dp"
-            android:text="@string/button_generate" />
+            android:text="@string/button_generate"
+            android:textColor="#fff" />
 
-        <ImageView
-            android:id="@+id/img_qr_code"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginTop="16dp"
-            android:layout_marginBottom="32dp"
-            android:padding="8dp" />
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"            >
+
+            <ImageView
+                android:id="@+id/img_qr_code"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="24dp"
+                android:gravity="center"
+                android:padding="8dp" />
+
+            <ImageView
+                android:id="@+id/img_share"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="8dp"
+                android:background="@drawable/bg_button_transparent"
+                android:padding="4dp"
+                android:layout_gravity="end|top"
+                android:src="@drawable/ic_share"
+                android:visibility="gone"
+                tools:visibility="visible"/>
+        </FrameLayout>
+
     </LinearLayout>
 </ScrollView>
