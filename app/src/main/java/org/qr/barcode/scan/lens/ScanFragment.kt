@@ -27,8 +27,7 @@ class ScanFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         binding.vScanner.run {
             setResultHandler { scanResult ->
-                val country = (scanResult.resultMetadata[ResultMetadataType.POSSIBLE_COUNTRY] as? String)
-                        ?: ""
+                val country = (scanResult.resultMetadata?.get(ResultMetadataType.POSSIBLE_COUNTRY) as? String)?: ""
                 (activity as? MainActivity)?.showResult(scanResult.text, country)
                 stopCamera()
             }
