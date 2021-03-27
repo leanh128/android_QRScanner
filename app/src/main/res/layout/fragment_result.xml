@@ -1,64 +1,82 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    xmlns:ads="http://schemas.android.com/apk/res-auto"
-    android:orientation="vertical">
+    android:layout_height="wrap_content"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:background="@color/colorPrimary">
 
-    <TextView
-        android:id="@+id/tv_title"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="10dp"
-        android:text="Result"
-        android:textColor="#000"
-        android:textSize="24sp" />
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="2dp"
-        android:background="@color/base_text_color" />
-
-
-    <TextView
-        android:id="@+id/tv_result"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_marginStart="10dp"
-        android:layout_marginTop="16dp"
-        android:layout_weight="1"
-        android:background="#fff"
-        android:textIsSelectable="true"
-        android:gravity="center_horizontal"
-        android:textColor="#000"
-        android:textSize="18sp"
-        android:text="Holy shit" />
-
-<View
-    android:layout_width="match_parent"
-    android:layout_height="1dp"
-    android:background="#000"/>
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="vertical">
 
-        <Button
-            android:id="@+id/btn_cancel"
-            style="@style/result_dialog_control_button"
-            android:text="Cancel" />
+        <TextView
+            android:id="@+id/tv_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="10dp"
+            android:text="@string/title_result"
+            android:textColor="#fff"
+            android:gravity="center"
+            android:background="@color/colorPrimaryDark"
+            android:textSize="24sp"
+            app:drawableStartCompat="@drawable/ic_back" />
 
-        <Button
-            android:id="@+id/btn_process"
-            style="@style/result_dialog_control_button"
-            android:text="Process" />
+
+        <TextView
+            android:id="@+id/tv_result"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_marginTop="16dp"
+            android:layout_marginHorizontal="8dp"
+            android:background="@drawable/bg_result"
+            android:gravity="center"
+            tools:text="Holy shit"
+            android:minLines="5"
+            android:padding="8dp"
+            android:textColor="#fff"
+            android:textIsSelectable="true"
+            android:textSize="18sp" />
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="4dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="12dp"
+            android:orientation="horizontal">
+
+            <TextView android:id="@+id/btn_cancel"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:padding="10dp"
+                android:textStyle="bold"
+                android:textSize="16sp"
+                android:textColor="#fff"
+                android:gravity="center"
+                android:layout_marginEnd="6dp"
+                android:background="@drawable/bg_button_process"
+                android:text="@string/button_back" />
+
+            <TextView android:id="@+id/btn_process"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:padding="10dp"
+                android:textStyle="bold"
+                android:textSize="16sp"
+                android:textColor="#fff"
+                android:gravity="center"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/bg_button_process"
+                android:text="@string/button_search" />
+        </LinearLayout>
+
+
     </LinearLayout>
-    <!--todo Change ads id here-->
-    <com.google.android.gms.ads.AdView
-        android:id="@+id/adView"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="#80deea"
-        ads:adSize="BANNER"
-        ads:adUnitId="ca-app-pub-3940256099942544/6300978111"/>
-</LinearLayout>
+
+</ScrollView>

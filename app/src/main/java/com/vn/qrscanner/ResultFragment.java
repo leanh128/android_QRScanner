@@ -4,17 +4,16 @@ import android.app.SearchManager;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
-import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.AdView;
-import com.vn.qrscanner.Utilities.StringUtil;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.vn.qrscanner.bases.BaseFragment;
+import com.vn.qrscanner.Utilities.StringUtil;
 
 public class ResultFragment extends BaseFragment implements View.OnClickListener {
     public static final String TAG = "ResultFragment";
@@ -25,7 +24,7 @@ public class ResultFragment extends BaseFragment implements View.OnClickListener
     private String mResult, mCodeType, mCountry;
 
     private TextView tvResult;
-    private Button btnProcess;
+    private TextView btnProcess;
 
     public static ResultFragment newInstance(String result, String codeType, String country) {
 
@@ -66,13 +65,9 @@ public class ResultFragment extends BaseFragment implements View.OnClickListener
         view.findViewById(R.id.btn_cancel).setOnClickListener(this);
         btnProcess.setOnClickListener(this);
 
-        AdView mAdView = view.findViewById(R.id.adView);
-        AdRequest adRequest = new AdRequest.Builder().build();
-        mAdView.loadAd(adRequest);
-
         if (StringUtil.isLink(mResult)) {
             btnProcess.setText("Go to link");
-        } else btnProcess.setText("Search it");
+        } else btnProcess.setText("Search");
 
     }
 

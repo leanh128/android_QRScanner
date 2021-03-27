@@ -1,34 +1,26 @@
-package com.vn.qrscanner.bases;
+package com.vn.qrscanner.bases
 
-import android.os.Bundle;
-import android.support.annotation.LayoutRes;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.annotation.LayoutRes
+import androidx.fragment.app.Fragment
+import com.vn.qrscanner.MainActivity
+import com.vn.qrscanner.NavigationManager
 
-import com.vn.qrscanner.MainActivity;
-import com.vn.qrscanner.NavigationManager;
-
-public abstract class BaseFragment extends Fragment {
-    protected NavigationManager navigationManager;
-
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getActivity() instanceof MainActivity) {
-            navigationManager = ((MainActivity) getActivity()).navigationManager;
-        }
+abstract class BaseFragment : Fragment() {
+    @JvmField
+    protected var navigationManager: NavigationManager? = null
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        navigationManager = (activity as? MainActivity)?.navigationManager
     }
 
-    @Nullable
-    @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(getLayoutResource(), container, false);
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        return inflater.inflate(layoutResource, container, false)
     }
 
-    @LayoutRes
-    public abstract int getLayoutResource();
+    @get:LayoutRes
+    abstract val layoutResource: Int
 }
