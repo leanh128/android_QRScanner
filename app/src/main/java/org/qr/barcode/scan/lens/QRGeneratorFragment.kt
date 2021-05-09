@@ -92,11 +92,11 @@ class QRGeneratorFragment : Fragment() {
         activity?.window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 //        val generateSize = (displayMetrics.heightPixels.coerceAtLeast(200.dpToPx()).coerceAtMost(displayMetrics.widthPixels.coerceAtLeast(200.dpToPx())) *.8).toInt()
         var codeMatrix: BitMatrix? = null
-        try {
+        kotlin.runCatching {
             codeMatrix = QRCodeWriter().encode(content, BarcodeFormat.QR_CODE, BITMATRIX_SIZE, BITMATRIX_SIZE, mapOf(
                     EncodeHintType.MARGIN to 1
             ))
-        } catch (e: WriterException) {
+        }.onFailure {
             Toast.makeText(binding.root.context, "IO Error", Toast.LENGTH_SHORT).show()
         }
         codeMatrix?.let {

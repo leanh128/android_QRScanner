@@ -37,31 +37,31 @@
 
     <Button
         android:id="@+id/btn_action"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginHorizontal="12dp"
         android:layout_marginTop="16dp"
         android:background="@drawable/bg_button_action"
         android:gravity="center"
         android:padding="14dp"
+        android:layout_gravity="center_horizontal"
+        android:ems="12"
         android:text="@string/button_search"
         android:textColor="#fff"
         android:textSize="16sp" />
 
     <Button
         android:id="@+id/btn_back"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginHorizontal="8dp"
         android:layout_marginTop="16dp"
         android:layout_marginBottom="32dp"
         android:background="@drawable/bg_button_back"
         android:gravity="center"
+        android:layout_gravity="center_horizontal"
+        android:ems="12"
         android:padding="14dp"
         android:text="@string/button_back"
         android:textColor="#fff"
         android:textSize="16sp" />
-
-
 </LinearLayout>
 
