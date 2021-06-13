@@ -1,9 +1,9 @@
 package org.qr.barcode.scan.lens
 
+import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Color
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -22,7 +22,6 @@ import androidx.core.graphics.drawable.toBitmap
 import androidx.fragment.app.Fragment
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
-import com.google.zxing.WriterException
 import com.google.zxing.common.BitMatrix
 import com.google.zxing.qrcode.QRCodeWriter
 import org.qr.barcode.scan.lens.databinding.FragmentQrGeneratorBinding
@@ -40,23 +39,36 @@ class QRGeneratorFragment : Fragment() {
         return binding.root
     }
 
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
-        (activity as? MainActivity)?.setScreenTitle(getString(R.string.title_qr_generator))
-    }
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding.btnGenerate.setOnClickListener {
-            if (binding.etContent.text.toString().isEmpty()) {
+            if (binding.etContent.text.toString().trim().isEmpty()) {
                 activity?.let { Toast.makeText(it, R.string.toast_empty_content, Toast.LENGTH_SHORT).show() }
             } else {
-                generateQR(binding.etContent.text.toString())
+                val content = binding.etContent.text.toString().trim()
+                if (lastGenerateText == content) {
+                    hideKeyboard()
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        (activity as? MainActivity)?.scrollToBottom()
+                    }, 260)
+
+                }else{
+                    generateQR(content)
+                }
+
             }
         }
         binding.root.setOnClickListener {
             hideKeyboard()
         }
+
+        binding.btnClear.setOnClickListener {
+            binding.etContent.setText("")
+        }
+
+//        binding.etContent.setOnClickListener {
+//            (activity as? MainActivity)?.scrollToTop()
+//        }
 
         binding.imgShare.setOnClickListener {
             binding.imgQrCode.drawable?.toBitmap()?.let {
@@ -64,7 +76,10 @@ class QRGeneratorFragment : Fragment() {
                     val generatedFile = File(activity?.getExternalFilesDir(null), "$SHARE_DIR/$GENERATED_FILE_NAME")
                     val shareIntent = Intent(Intent.ACTION_SEND).apply {
                         Log.d("leon", "generated file: ${generatedFile.absolutePath}")
-                        putExtra(Intent.EXTRA_STREAM, FileProvider.getUriForFile(binding.root.context, "${BuildConfig.APPLICATION_ID}.file_provider", generatedFile))
+                        putExtra(
+                            Intent.EXTRA_STREAM,
+                            FileProvider.getUriForFile(binding.root.context, "${BuildConfig.APPLICATION_ID}.file_provider", generatedFile)
+                        )
                         type = "image/jpeg"
                         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                     }
@@ -74,28 +89,32 @@ class QRGeneratorFragment : Fragment() {
                     e.printStackTrace()
                 }
             }
-
         }
+    }
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        (activity as? MainActivity)?.setScreenTitle(getString(R.string.title_qr_generator))
     }
 
 
     private fun hideKeyboard() {
         activity?.let {
             getSystemService(it, InputMethodManager::class.java)
-                    ?.hideSoftInputFromWindow(binding.etContent.windowToken, 0)
+                ?.hideSoftInputFromWindow(binding.etContent.windowToken, 0)
         }
     }
 
     private fun generateQR(content: String) {
-        if (lastGenerateText == content)
-            return
         activity?.window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 //        val generateSize = (displayMetrics.heightPixels.coerceAtLeast(200.dpToPx()).coerceAtMost(displayMetrics.widthPixels.coerceAtLeast(200.dpToPx())) *.8).toInt()
         var codeMatrix: BitMatrix? = null
         kotlin.runCatching {
-            codeMatrix = QRCodeWriter().encode(content, BarcodeFormat.QR_CODE, BITMATRIX_SIZE, BITMATRIX_SIZE, mapOf(
+            codeMatrix = QRCodeWriter().encode(
+                content, BarcodeFormat.QR_CODE, BITMATRIX_SIZE, BITMATRIX_SIZE, mapOf(
                     EncodeHintType.MARGIN to 1
-            ))
+                )
+            )
         }.onFailure {
             Toast.makeText(binding.root.context, "IO Error", Toast.LENGTH_SHORT).show()
         }
@@ -122,11 +141,15 @@ class QRGeneratorFragment : Fragment() {
 
     private fun calculateQRDisplaySize(): Int {
         val displayMetrics = DisplayMetrics()
-        activity?.display?.getRealMetrics(displayMetrics)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            activity?.display?.getRealMetrics(displayMetrics)
+        } else {
+            activity?.windowManager?.defaultDisplay?.getRealMetrics(displayMetrics)
+        }
 
         val width = DEFAULT_QR_DISPLAY_SIZE_DP.dpToPx().coerceAtLeast(displayMetrics.widthPixels - 32f.dpToPx())
         val height = DEFAULT_QR_DISPLAY_SIZE_DP.dpToPx().coerceAtLeast(displayMetrics.heightPixels - 32f.dpToPx())
-        return (floor(width.coerceAtMost(height) / BITMATRIX_SIZE) * BITMATRIX_SIZE).toInt()
+        return (floor(minOf(width, height) / BITMATRIX_SIZE) * BITMATRIX_SIZE).toInt()
     }
 
     private fun writeImageToFile(bitmap: Bitmap) {

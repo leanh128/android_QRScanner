@@ -1,11 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Code Len</string>
+    <string name="app_name">QR Scanner</string>
     <string name="title_result">Result</string>
     <string name="button_search">Search</string>
-    <string name="button_back">Back</string>
+    <string name="back">Back</string>
     <string name="button_open_link">Open link</string>
     <string name="title_scan">scanning…</string>
-    <string name="button_generate">generate</string>
+    <string name="generate">generate</string>
     <string name="title_qr_generator">QR Generator</string>
     <string name="toast_empty_content">Nothing to generate</string>
     <string name="hint_qr_code_generate_hint">Your content here…</string>

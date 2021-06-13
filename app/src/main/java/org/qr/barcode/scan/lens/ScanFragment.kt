@@ -1,5 +1,6 @@
 package org.qr.barcode.scan.lens
 
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -18,8 +19,8 @@ class ScanFragment : Fragment() {
         return binding.root
     }
 
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
         (activity as? MainActivity)?.setScreenTitle(getString(R.string.title_scan))
     }
 

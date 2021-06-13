@@ -1,7 +1,7 @@
 package org.qr.barcode.scan.lens
 
-import android.annotation.SuppressLint
 import android.app.SearchManager
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -20,8 +20,8 @@ class ResultFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (arguments != null) {
-            result = arguments!!.getString(ARG_RESULT, "")
-            country = arguments!!.getString(ARG_COUNTRY, "")
+            result = requireArguments().getString(ARG_RESULT, "")
+            country = requireArguments().getString(ARG_COUNTRY, "")
 
         }
     }
@@ -31,25 +31,26 @@ class ResultFragment : Fragment() {
         return binding.root
     }
 
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
         (activity as? MainActivity)?.setScreenTitle(getString(R.string.title_result))
     }
 
-    @SuppressLint("SetTextI18n")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding.layoutResult.setOnClickListener { handleResultAction() }
         binding.tvResult.text = "${if (country.isEmpty()) "" else "$country - "}$result"
 
         binding.btnAction.run {
-            text = getString(if (result.isLink()) R.string.button_open_link else R.string.button_search)
+            text = getString(if (result.isLink()) R.string.button_open_link else android.R.string.search_go)
             setOnClickListener { handleResultAction() }
         }
 
         binding.btnBack.run {
             setOnClickListener { backToScan() }
         }
+
+        (activity as? MainActivity)?.setScreenTitle(getString(R.string.title_result))
     }
 
     private fun backToScan() {

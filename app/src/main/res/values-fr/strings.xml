@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Scanner QR</string>
+    <string name="title_result">Résultat</string>
+    <string name="button_search">Rechercher</string>
+    <string name="back">Dos</string>
+    <string name="button_open_link">Ouvrir le lien</string>
+    <string name="title_scan">balayage…</string>
+    <string name="generate">produire</string>
+    <string name="title_qr_generator">Générateur de QR</string>
+    <string name="toast_empty_content">Rien à générer</string>
+    <string name="hint_qr_code_generate_hint">Votre contenu ici…</string>
+</resources>

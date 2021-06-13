@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">QRスキャナー</string>
+    <string name="title_result">結果</string>
+    <string name="button_search">探す</string>
+    <string name="back">バック</string>
+    <string name="button_open_link">リンクを開く</string>
+    <string name="title_scan">走査…</string>
+    <string name="generate">生む</string>
+    <string name="title_qr_generator">QRジェネレーター</string>
+    <string name="toast_empty_content">生成するものはありません</string>
+    <string name="hint_qr_code_generate_hint">ここにあなたのコンテンツ…</string>
+
+</resources>

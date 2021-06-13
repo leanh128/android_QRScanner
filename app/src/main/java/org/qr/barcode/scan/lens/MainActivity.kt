@@ -119,6 +119,10 @@ class MainActivity : AppCompatActivity() {
         binding.scrollView.smoothScrollTo(0, binding.scrollView.bottom)
     }
 
+    fun scrollToTop() {
+        binding.scrollView.smoothScrollTo(0, binding.scrollView.top)
+    }
+
     companion object {
         private const val TAG = "MainActivity"
         const val REQUEST_CODE_CAMERA = 123

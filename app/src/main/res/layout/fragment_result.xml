@@ -45,7 +45,7 @@
         android:padding="14dp"
         android:layout_gravity="center_horizontal"
         android:ems="12"
-        android:text="@string/button_search"
+        android:text="@android:string/search_go"
         android:textColor="#fff"
         android:textSize="16sp" />
 
@@ -60,7 +60,7 @@
         android:layout_gravity="center_horizontal"
         android:ems="12"
         android:padding="14dp"
-        android:text="@string/button_back"
+        android:text="@string/back"
         android:textColor="#fff"
         android:textSize="16sp" />
 </LinearLayout>
