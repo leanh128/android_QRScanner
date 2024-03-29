@@ -1,4 +1,4 @@
-package org.qr.barcode.scan.lens
+package com.vn.qrscanner
 
 import android.app.SearchManager
 import android.content.Context
@@ -10,8 +10,8 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
-import org.qr.barcode.scan.lens.databinding.FragmentResultBinding
-import org.qr.barcode.scan.lens.extensions.isLink
+import com.vn.qrscanner.databinding.FragmentResultBinding
+import com.vn.qrscanner.extensions.isLink
 
 class ResultFragment : Fragment() {
     private var result: String = ""

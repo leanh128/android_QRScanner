@@ -1,4 +1,4 @@
-package org.qr.barcode.scan.lens.extensions
+package com.vn.qrscanner.extensions
 
 import android.text.TextUtils
 import java.util.Locale

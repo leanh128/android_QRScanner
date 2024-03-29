@@ -1,4 +1,4 @@
-package org.qr.barcode.scan.lens
+package com.vn.qrscanner
 
 import android.content.Context
 import android.content.Intent
@@ -24,8 +24,8 @@ import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.common.BitMatrix
 import com.google.zxing.qrcode.QRCodeWriter
-import org.qr.barcode.scan.lens.databinding.FragmentQrGeneratorBinding
-import org.qr.barcode.scan.lens.extensions.dpToPx
+import com.vn.qrscanner.databinding.FragmentQrGeneratorBinding
+import com.vn.qrscanner.extensions.dpToPx
 import java.io.File
 import java.io.FileOutputStream
 import kotlin.math.floor
@@ -78,7 +78,8 @@ class QRGeneratorFragment : Fragment() {
                         Log.d("leon", "generated file: ${generatedFile.absolutePath}")
                         putExtra(
                             Intent.EXTRA_STREAM,
-                            FileProvider.getUriForFile(binding.root.context, "${BuildConfig.APPLICATION_ID}.file_provider", generatedFile)
+//                            FileProvider.getUriForFile(binding.root.context, "${BuildConfig.APPLICATION_ID}.file_provider", generatedFile)
+                            FileProvider.getUriForFile(binding.root.context, "file_provider", generatedFile)
                         )
                         type = "image/jpeg"
                         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)

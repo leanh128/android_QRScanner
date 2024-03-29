@@ -1,4 +1,4 @@
-package org.qr.barcode.scan.lens
+package com.vn.qrscanner
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -8,8 +8,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.MobileAds
-import org.qr.barcode.scan.lens.databinding.ActivityMainBinding
-import org.qr.barcode.scan.lens.utils.PermissionUtil
+import com.vn.qrscanner.databinding.ActivityMainBinding
+import com.vn.qrscanner.utils.PermissionUtil
 
 class MainActivity : AppCompatActivity() {
 

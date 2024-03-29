@@ -1,4 +1,4 @@
-package org.qr.barcode.scan.lens
+package com.vn.qrscanner
 
 import android.content.Context
 import android.os.Bundle
@@ -9,7 +9,7 @@ import android.view.ViewGroup
 import android.view.WindowManager
 import androidx.fragment.app.Fragment
 import com.google.zxing.ResultMetadataType
-import org.qr.barcode.scan.lens.databinding.FragmentScanBinding
+import com.vn.qrscanner.databinding.FragmentScanBinding
 
 class ScanFragment : Fragment() {
     private lateinit var binding: FragmentScanBinding

@@ -1,4 +1,4 @@
-package org.qr.barcode.scan.lens.utils
+package com.vn.qrscanner.utils
 
 import android.content.Context
 import android.content.pm.PackageManager
