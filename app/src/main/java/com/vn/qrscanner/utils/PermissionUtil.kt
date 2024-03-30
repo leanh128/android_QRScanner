@@ -8,11 +8,10 @@ import java.util.ArrayList
 
 object PermissionUtil {
     fun verifyPermission(context: Context, permission: String?): Boolean {
-        return if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) true else context.checkSelfPermission(permission!!) == PackageManager.PERMISSION_GRANTED
+        return context.checkSelfPermission(permission!!) == PackageManager.PERMISSION_GRANTED
     }
 
     fun requestPermissions(activity: AppCompatActivity, permissions: Array<String>, requestCode: Int) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return
         val missingPermissions = ArrayList<String>()
         for (permission in permissions) {
             if (!verifyPermission(activity, permission)) {

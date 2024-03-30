@@ -52,7 +52,7 @@ class QRGeneratorFragment : Fragment() {
                         (activity as? MainActivity)?.scrollToBottom()
                     }, 260)
 
-                }else{
+                } else {
                     generateQR(content)
                 }
 
@@ -78,8 +78,12 @@ class QRGeneratorFragment : Fragment() {
                         Log.d("leon", "generated file: ${generatedFile.absolutePath}")
                         putExtra(
                             Intent.EXTRA_STREAM,
-//                            FileProvider.getUriForFile(binding.root.context, "${BuildConfig.APPLICATION_ID}.file_provider", generatedFile)
-                            FileProvider.getUriForFile(binding.root.context, "file_provider", generatedFile)
+                            FileProvider.getUriForFile(
+                                binding.root.context,
+                                "${BuildConfig.APPLICATION_ID}.file_provider",
+                                generatedFile
+                            )
+//                            FileProvider.getUriForFile(binding.root.context, "file_provider", generatedFile)
                         )
                         type = "image/jpeg"
                         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)

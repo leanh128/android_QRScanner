@@ -19,11 +19,9 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         val requiredPermissions = arrayOf(Manifest.permission.CAMERA)
         setContentView(R.layout.activity_main)
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-            window.navigationBarColor = ContextCompat.getColor(this, R.color.colorPrimaryDark)
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
-                window.navigationBarDividerColor = ContextCompat.getColor(this, android.R.color.white)
-            }
+        window.navigationBarColor = ContextCompat.getColor(this, R.color.colorPrimaryDark)
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+            window.navigationBarDividerColor = ContextCompat.getColor(this, android.R.color.white)
         }
         if (!PermissionUtil.verifyPermission(this, Manifest.permission.CAMERA)) {
             PermissionUtil.requestPermissions(this, requiredPermissions, REQUEST_CODE_CAMERA)
