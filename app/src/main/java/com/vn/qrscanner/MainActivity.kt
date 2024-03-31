@@ -1,13 +1,13 @@
 package com.vn.qrscanner
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.MobileAds
 import com.vn.qrscanner.databinding.ActivityMainBinding
 import com.vn.qrscanner.utils.PermissionUtil
 
@@ -47,8 +47,6 @@ class MainActivity : AppCompatActivity() {
     private fun init() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        MobileAds.initialize(this)
-        binding.adView.loadAd(AdRequest.Builder().build())
         binding.imgGenerateQr.setOnClickListener {
             openQRGenerator()
         }
@@ -70,37 +68,15 @@ class MainActivity : AppCompatActivity() {
             supportFragmentManager.beginTransaction().remove(it).commitNowAllowingStateLoss()
         }
         supportFragmentManager.beginTransaction()
-                .replace(
-                        binding.fragmentContainerScanner.id,
-                        ScanFragment()
-                )
-                .commitNowAllowingStateLoss()
-    }
-
-    fun showResult(result: String, country: String = "") {
-        if (supportFragmentManager.findFragmentById(binding.fragmentContainerText.id) is ResultFragment)
-            return
-        supportFragmentManager.findFragmentById(binding.fragmentContainerScanner.id)?.let {
-            supportFragmentManager.beginTransaction().remove(it).commitNowAllowingStateLoss()
-        }
-        supportFragmentManager.beginTransaction()
-                .replace(
-                        binding.fragmentContainerText.id,
-                        ResultFragment.newInstance(result, country))
-                .commitNowAllowingStateLoss()
+            .replace(
+                binding.fragmentContainerScanner.id,
+                ScanFragment()
+            )
+            .commitNowAllowingStateLoss()
     }
 
     private fun openQRGenerator() {
-        if (supportFragmentManager.findFragmentById(binding.fragmentContainerText.id) is QRGeneratorFragment)
-            return
-        supportFragmentManager.findFragmentById(binding.fragmentContainerScanner.id)?.let {
-            supportFragmentManager.beginTransaction().remove(it).commitNowAllowingStateLoss()
-        }
-        supportFragmentManager.beginTransaction()
-                .replace(
-                        binding.fragmentContainerText.id,
-                        QRGeneratorFragment())
-                .commitNowAllowingStateLoss()
+        startActivity(Intent(this, QRGeneratorActivity::class.java))
     }
 
     fun setScreenTitle(title: String) {
@@ -111,14 +87,6 @@ class MainActivity : AppCompatActivity() {
     override fun onStop() {
         super.onStop()
         window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-    }
-
-    fun scrollToBottom() {
-        binding.scrollView.smoothScrollTo(0, binding.scrollView.bottom)
-    }
-
-    fun scrollToTop() {
-        binding.scrollView.smoothScrollTo(0, binding.scrollView.top)
     }
 
     companion object {

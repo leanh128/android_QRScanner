@@ -10,9 +10,19 @@ import android.view.WindowManager
 import androidx.fragment.app.Fragment
 import com.google.zxing.ResultMetadataType
 import com.vn.qrscanner.databinding.FragmentScanBinding
+import me.dm7.barcodescanner.zxing.ZXingScannerView.ResultHandler
 
 class ScanFragment : Fragment() {
     private lateinit var binding: FragmentScanBinding
+
+    private val scanResultHandler by lazy {
+        ResultHandler { scanResult ->
+            if (context == null) return@ResultHandler
+            val country = (scanResult.resultMetadata?.get(ResultMetadataType.POSSIBLE_COUNTRY) as? String) ?: ""
+            ScanResultActivity.showResultActivity(requireContext(), scanResult.text, country)
+            binding.vScanner.stopCamera()
+        }
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         binding = FragmentScanBinding.inflate(inflater, container, false)
@@ -26,28 +36,20 @@ class ScanFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding.vScanner.run {
-            setResultHandler { scanResult ->
-                val country = (scanResult.resultMetadata?.get(ResultMetadataType.POSSIBLE_COUNTRY) as? String)?: ""
-                (activity as? MainActivity)?.showResult(scanResult.text, country)
-                stopCamera()
-            }
-            startCamera()
+        with(binding.vScanner) {
+            setResultHandler(scanResultHandler)
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        Log.d("leon", "start scan")
+    override fun onStart() {
+        super.onStart()
+        binding.vScanner.startCamera()
         activity?.window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
 
-    override fun onPause() {
-        super.onPause()
+    override fun onStop() {
+        super.onStop()
         binding.vScanner.stopCamera()
         activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-    }
-    companion object {
-        private const val TAG = "ScannerView"
     }
 }
