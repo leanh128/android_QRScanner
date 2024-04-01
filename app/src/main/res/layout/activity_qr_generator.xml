@@ -10,12 +10,11 @@
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/colorPrimaryDark"
         android:paddingHorizontal="8dp"
         app:navigationIcon="@drawable/ic_back"
+        app:navigationIconTint="@color/colorPrimaryDark"
         app:title="@string/title_qr_generator"
-        app:titleCentered="true"
-        app:titleTextColor="#fff" />
+        app:titleCentered="true" />
 
     <ScrollView
         android:id="@+id/contentContainer"
@@ -54,7 +53,7 @@
                         android:cursorVisible="true"
                         android:gravity="center"
                         android:hint="@string/hint_qr_code_generate_hint"
-                        android:minLines="4"
+                        android:minLines="2"
                         android:padding="8dp"
                         android:textColor="#fff"
                         android:textColorHint="#afff" />
@@ -109,7 +108,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:layout_marginTop="16dp"
-                android:layout_marginBottom="32dp"
+                android:layout_marginBottom="8dp"
                 ads:adSize="LARGE_BANNER"
                 ads:adUnitId="@string/RESULT_BANNER_ADS_UNIT" />
         </LinearLayout>
