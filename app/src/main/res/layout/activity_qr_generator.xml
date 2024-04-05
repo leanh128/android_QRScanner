@@ -10,7 +10,7 @@
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingHorizontal="8dp"
+        android:layout_marginBottom="12dp"
         app:navigationIcon="@drawable/ic_back"
         app:navigationIconTint="@color/colorPrimaryDark"
         app:title="@string/title_qr_generator"
@@ -112,8 +112,5 @@
                 ads:adSize="LARGE_BANNER"
                 ads:adUnitId="@string/RESULT_BANNER_ADS_UNIT" />
         </LinearLayout>
-
-
     </ScrollView>
-
 </LinearLayout>

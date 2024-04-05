@@ -10,88 +10,61 @@
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/colorPrimaryDark"
         android:paddingHorizontal="8dp"
         app:navigationIcon="@drawable/ic_back"
+        android:elevation="8dp"
         app:title="@string/title_result"
-        app:titleCentered="true"
-        app:titleTextColor="#fff" />
+        app:titleCentered="true" />
 
-    <ScrollView
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="2.5">
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/bg_corner_16"
+        android:elevation="8dp"
+        android:orientation="vertical"
+        android:paddingHorizontal="8dp"
+        android:paddingVertical="12dp">
 
-        <LinearLayout
+        <FrameLayout
+            android:id="@+id/layout_result"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="16dp"
-            android:layout_marginTop="16dp"
-            android:background="@drawable/bg_corner_16"
-            android:elevation="8dp"
-            android:orientation="vertical"
-            android:paddingHorizontal="8dp"
-            android:paddingVertical="12dp">
+            android:layout_margin="8dp"
+            android:background="@drawable/bg_result">
 
-            <FrameLayout
-                android:id="@+id/layout_result"
+            <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="8dp"
-                android:background="@drawable/bg_result">
+                android:minLines="5"
+                android:padding="8dp"
+                android:textSize="18sp" />
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:minLines="5"
-                    android:padding="8dp"
-                    android:textSize="18sp" />
-
-                <TextView
-                    android:id="@+id/tv_result"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:gravity="center"
-                    android:padding="8dp"
-                    android:textColor="#fff"
-                    android:textIsSelectable="true"
-                    android:textSize="18sp"
-                    tools:text="Holy shit" />
-
-            </FrameLayout>
-
-            <Button
-                android:id="@+id/btn_action"
+            <TextView
+                android:id="@+id/tv_result"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="16dp"
-                android:background="@drawable/bg_button_action"
-                android:ems="12"
+                android:layout_gravity="center"
                 android:gravity="center"
-                android:padding="14dp"
-                android:text="@android:string/search_go"
+                android:padding="8dp"
                 android:textColor="#fff"
-                android:textSize="16sp" />
+                android:textIsSelectable="true"
+                android:textSize="18sp"
+                tools:text="Holy shit" />
+        </FrameLayout>
 
-            <Button
-                android:id="@+id/btn_back"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="16dp"
-                android:layout_marginBottom="32dp"
-                android:background="@drawable/bg_button_back"
-                android:ems="12"
-                android:gravity="center"
-                android:padding="14dp"
-                android:text="@string/back"
-                android:textColor="#fff"
-                android:textSize="16sp" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnAction"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="12dp"
+            android:backgroundTint="#2196F3"
+            android:text="@android:string/search_go"
+            android:textColor="#fff" />
 
-        </LinearLayout>
-    </ScrollView>
+    </LinearLayout>
 
     <FrameLayout
         android:layout_width="match_parent"

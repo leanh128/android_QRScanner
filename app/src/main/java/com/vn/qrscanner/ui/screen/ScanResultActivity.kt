@@ -1,4 +1,4 @@
-package com.vn.qrscanner
+package com.vn.qrscanner.ui.screen
 
 import android.app.SearchManager
 import android.content.Context
@@ -7,6 +7,7 @@ import android.net.Uri
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.os.bundleOf
+import com.vn.qrscanner.R
 import com.vn.qrscanner.databinding.ActivityScanResultBinding
 import com.vn.qrscanner.extensions.isLink
 

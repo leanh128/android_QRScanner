@@ -1,4 +1,4 @@
-package com.vn.qrscanner
+package com.vn.qrscanner.ui.screen
 
 import android.content.Intent
 import android.graphics.Bitmap
@@ -19,6 +19,8 @@ import com.google.android.gms.ads.AdRequest
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.qrcode.QRCodeWriter
+import com.vn.qrscanner.BuildConfig
+import com.vn.qrscanner.R
 import com.vn.qrscanner.databinding.ActivityQrGeneratorBinding
 import com.vn.qrscanner.extensions.android.scrollToBottom
 import com.vn.qrscanner.extensions.dpToPx

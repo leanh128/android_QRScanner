@@ -30,7 +30,7 @@
             android:value="ca-app-pub-4182590278581659~3089901301" />
 
         <activity
-            android:name=".MainActivity"
+            android:name=".ui.screen.ScanActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -39,10 +39,10 @@
         </activity>
 
         <activity
-            android:name=".QRGeneratorActivity"
+            android:name=".ui.screen.QRGeneratorActivity"
             android:exported="false" />
         <activity
-            android:name=".ScanResultActivity"
+            android:name=".ui.screen.ScanResultActivity"
             android:exported="false" />
 
     </application>
