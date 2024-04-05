@@ -10,11 +10,11 @@
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="12dp"
+        android:background="@color/colorPrimaryDark"
         app:navigationIcon="@drawable/ic_back"
-        app:navigationIconTint="@color/colorPrimaryDark"
         app:title="@string/title_qr_generator"
-        app:titleCentered="true" />
+        app:titleCentered="true"
+        app:titleTextColor="#fff" />
 
     <ScrollView
         android:id="@+id/contentContainer"
@@ -78,6 +78,7 @@
                     android:layout_marginBottom="8dp"
                     android:backgroundTint="#2196F3"
                     android:text="@string/generate"
+                    android:textAllCaps="true"
                     android:textColor="#fff" />
 
                 <ImageView

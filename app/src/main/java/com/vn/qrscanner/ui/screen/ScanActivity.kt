@@ -6,15 +6,14 @@ import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Lifecycle
 import com.google.zxing.ResultMetadataType
 import com.vn.qrscanner.databinding.ActivityScanBinding
 import com.vn.qrscanner.utils.PermissionUtil
 import me.dm7.barcodescanner.zxing.ZXingScannerView
 
 class ScanActivity : AppCompatActivity() {
-
     private val viewBinding: ActivityScanBinding by lazy { ActivityScanBinding.inflate(layoutInflater) }
-
     private val scanResultHandler by lazy {
         ZXingScannerView.ResultHandler { scanResult ->
             val country = (scanResult.resultMetadata?.get(ResultMetadataType.POSSIBLE_COUNTRY) as? String) ?: ""
@@ -42,6 +41,8 @@ class ScanActivity : AppCompatActivity() {
                 }
             }
             initView()
+            if (lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED))
+                viewBinding.scannerCamera.startCamera()
         }
     }
 
@@ -52,7 +53,6 @@ class ScanActivity : AppCompatActivity() {
         }
         viewBinding.scannerCamera.setResultHandler(scanResultHandler)
     }
-
 
     override fun onStart() {
         super.onStart()

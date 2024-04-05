@@ -10,11 +10,12 @@
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@color/colorPrimaryDark"
         android:paddingHorizontal="8dp"
         app:navigationIcon="@drawable/ic_back"
-        android:elevation="8dp"
         app:title="@string/title_result"
-        app:titleCentered="true" />
+        app:titleCentered="true"
+        app:titleTextColor="#fff" />
 
     <LinearLayout
         android:layout_width="match_parent"
