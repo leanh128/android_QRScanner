@@ -79,7 +79,10 @@
                     android:backgroundTint="#2196F3"
                     android:text="@string/generate"
                     android:textAllCaps="true"
-                    android:textColor="#fff" />
+                    android:textColor="#fff"
+                    app:elevation="8dp"
+                    app:cornerRadius="8dp"
+                    app:rippleColor="@color/colorPrimaryDark"  />
 
                 <ImageView
                     android:id="@+id/imgQRCode"
@@ -98,6 +101,7 @@
                     android:layout_gravity="center_horizontal"
                     android:layout_margin="8dp"
                     android:background="@drawable/bg_button_transparent"
+                    android:elevation="8dp"
                     android:src="@drawable/ic_share"
                     android:visibility="gone"
                     tools:visibility="visible" />

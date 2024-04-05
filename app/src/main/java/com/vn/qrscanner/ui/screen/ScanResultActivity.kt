@@ -7,6 +7,7 @@ import android.net.Uri
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.os.bundleOf
+import com.google.android.gms.ads.AdRequest
 import com.vn.qrscanner.R
 import com.vn.qrscanner.databinding.ActivityScanResultBinding
 import com.vn.qrscanner.extensions.isLink
@@ -20,6 +21,7 @@ class ScanResultActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityScanResultBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        binding.adView.loadAd(AdRequest.Builder().build())
         readIntentData()
         initViews()
     }

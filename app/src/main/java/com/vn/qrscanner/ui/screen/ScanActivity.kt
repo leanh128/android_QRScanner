@@ -51,6 +51,7 @@ class ScanActivity : AppCompatActivity() {
         viewBinding.imgGenerateQr.setOnClickListener {
             startActivity(Intent(this, QRGeneratorActivity::class.java))
         }
+        viewBinding.scannerCamera.setAspectTolerance(0.5f) //for Huewei devices
         viewBinding.scannerCamera.setResultHandler(scanResultHandler)
     }
 

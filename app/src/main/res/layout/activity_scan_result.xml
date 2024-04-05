@@ -63,7 +63,10 @@
             android:layout_marginTop="12dp"
             android:backgroundTint="#2196F3"
             android:text="@android:string/search_go"
-            android:textColor="#fff" />
+            android:textColor="#fff"
+            app:elevation="8dp"
+            app:cornerRadius="8dp"
+            app:rippleColor="@color/colorPrimaryDark" />
 
     </LinearLayout>
 
