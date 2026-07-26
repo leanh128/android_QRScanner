@@ -1,4 +1,4 @@
-package com.vn.qrscanner.ui.screen
+package com.vn.qrscanner.features.scanner
 
 import android.Manifest
 import android.content.Intent
@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
 import com.google.zxing.ResultMetadataType
 import com.vn.qrscanner.databinding.ActivityScanBinding
+import com.vn.qrscanner.features.generator.QRGeneratorActivity
 import com.vn.qrscanner.utils.PermissionUtil
 import me.dm7.barcodescanner.zxing.ZXingScannerView
 

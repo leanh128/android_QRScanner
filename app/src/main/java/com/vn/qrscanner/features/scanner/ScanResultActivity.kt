@@ -1,4 +1,4 @@
-package com.vn.qrscanner.ui.screen
+package com.vn.qrscanner.features.scanner
 
 import android.app.SearchManager
 import android.content.Context
@@ -11,6 +11,7 @@ import com.google.android.gms.ads.AdRequest
 import com.vn.qrscanner.R
 import com.vn.qrscanner.databinding.ActivityScanResultBinding
 import com.vn.qrscanner.extensions.isLink
+import androidx.core.net.toUri
 
 class ScanResultActivity : AppCompatActivity() {
     private var result: String = ""
@@ -48,7 +49,7 @@ class ScanResultActivity : AppCompatActivity() {
                 startActivity(Intent().apply {
                     action = if (isLink()) Intent.ACTION_VIEW else Intent.ACTION_WEB_SEARCH
                     if (isLink())
-                        data = Uri.parse(binding.tvResult.text.toString())
+                        data = binding.tvResult.text.toString().toUri()
                     else putExtra(SearchManager.QUERY, binding.tvResult.text.toString())
                 })
             }

@@ -1,18 +1,16 @@
-package com.vn.qrscanner.ui.screen
+package com.vn.qrscanner.features.generator
 
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Color
-import android.os.Build
 import android.os.Bundle
 import android.os.Handler
-import android.util.DisplayMetrics
 import android.util.Log
 import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat.getSystemService
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.view.isVisible
 import com.google.android.gms.ads.AdRequest
@@ -26,8 +24,9 @@ import com.vn.qrscanner.extensions.android.scrollToBottom
 import com.vn.qrscanner.extensions.dpToPx
 import java.io.File
 import java.io.FileOutputStream
-import kotlin.math.floor
-
+import androidx.core.graphics.createBitmap
+import androidx.core.graphics.set
+import androidx.core.graphics.scale
 
 class QRGeneratorActivity : AppCompatActivity() {
     private val binding by lazy { ActivityQrGeneratorBinding.inflate(layoutInflater) }
@@ -58,7 +57,8 @@ class QRGeneratorActivity : AppCompatActivity() {
 
         binding.imgShare.setOnClickListener {
             try {
-                val generatedFile = File(getExternalFilesDir(null), "$SHARE_DIR/$GENERATED_FILE_NAME")
+                val generatedFile =
+                    File(getExternalFilesDir(null), "$SHARE_DIR/$GENERATED_FILE_NAME")
                 val shareIntent = Intent(Intent.ACTION_SEND).apply {
                     Log.d("leon", "generated file: ${generatedFile.absolutePath}")
                     putExtra(
@@ -81,13 +81,13 @@ class QRGeneratorActivity : AppCompatActivity() {
     }
 
     private fun hideKeyboard() {
-        getSystemService(this, InputMethodManager::class.java)
+        ContextCompat.getSystemService(this, InputMethodManager::class.java)
             ?.hideSoftInputFromWindow(binding.etContent.windowToken, 0)
     }
 
     private fun generateQR(content: String) {
         window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        val codeMatrix = kotlin.runCatching {
+        val codeMatrix = runCatching {
             QRCodeWriter().encode(
                 content, BarcodeFormat.QR_CODE, BITMATRIX_SIZE, BITMATRIX_SIZE, mapOf(
                     EncodeHintType.MARGIN to 1
@@ -96,16 +96,16 @@ class QRGeneratorActivity : AppCompatActivity() {
         }.onFailure {
             Toast.makeText(binding.root.context, "IO Error", Toast.LENGTH_SHORT).show()
         }.getOrNull() ?: return
-        val bmp = Bitmap.createBitmap(BITMATRIX_SIZE, BITMATRIX_SIZE, Bitmap.Config.RGB_565)
+        val bmp = createBitmap(BITMATRIX_SIZE, BITMATRIX_SIZE, Bitmap.Config.RGB_565)
         for (x in 0 until BITMATRIX_SIZE) {
             for (y in 0 until BITMATRIX_SIZE) {
-                bmp.setPixel(x, y, if (codeMatrix.get(x, y)) Color.BLACK else Color.WHITE)
+                bmp[x, y] = if (codeMatrix.get(x, y)) Color.BLACK else Color.WHITE
             }
         }
 
         hideKeyboard()
         lastGenerateText = content
-        val displayBitmap = Bitmap.createScaledBitmap(bmp, 300.dpToPx(), 300.dpToPx(), false)
+        val displayBitmap = bmp.scale(300.dpToPx(), 300.dpToPx(), false)
         binding.imgQRCode.setImageBitmap(displayBitmap)
         writeImageToFile(displayBitmap)
 
@@ -117,23 +117,10 @@ class QRGeneratorActivity : AppCompatActivity() {
 
     }
 
-    private fun calculateQRDisplaySize(): Int {
-        val displayMetrics = DisplayMetrics()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            display?.getRealMetrics(displayMetrics)
-        } else {
-            windowManager?.defaultDisplay?.getRealMetrics(displayMetrics)
-        }
-
-        val width = DEFAULT_QR_DISPLAY_SIZE_DP.dpToPx().coerceAtLeast(displayMetrics.widthPixels - 32f.dpToPx())
-        val height = DEFAULT_QR_DISPLAY_SIZE_DP.dpToPx().coerceAtLeast(displayMetrics.heightPixels - 32f.dpToPx())
-        return (floor(minOf(width, height) / BITMATRIX_SIZE) * BITMATRIX_SIZE).toInt()
-    }
-
     private fun writeImageToFile(bitmap: Bitmap) {
         val sharedDir = File(getExternalFilesDir(null), SHARE_DIR)
         sharedDir.mkdirs()
-        val tempFile = File(sharedDir, GENERATED_FILE_NAME);
+        val tempFile = File(sharedDir, GENERATED_FILE_NAME)
         tempFile.delete()
         val out = FileOutputStream(tempFile)
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out)
