@@ -1,0 +1,21 @@
+[versions]
+appcompat = "1.7.1"
+constraintlayout = "2.2.1"
+coreKtx = "1.19.0"
+espressoCore = "3.7.0"
+junit = "1.3.0"
+junitVersion = "4.13.2"
+material = "1.14.0"
+playServicesAds = "25.4.0"
+zxing="3.5.4"
+
+[libraries]
+androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
+androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
+androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junit" }
+junit = { group = "junit", name = "junit", version.ref = "junitVersion" }
+material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+play-services-ads = { group = "com.google.android.gms", name = "play-services-ads", version.ref = "playServicesAds" }
+zxing-core = { group = "com.google.zxing", name = "core", version.ref = "zxing" }

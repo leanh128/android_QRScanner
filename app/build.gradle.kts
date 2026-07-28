@@ -42,18 +42,20 @@ android {
 }
 
 dependencies {
-    implementation("androidx.core:core-ktx:1.19.0")
-    implementation("androidx.appcompat:appcompat:1.7.1")
-    implementation("com.google.android.material:material:1.14.0")
-    implementation("androidx.constraintlayout:constraintlayout:2.2.1")
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.material)
+    implementation(libs.androidx.constraintlayout)
 
     //Ads
-    implementation("com.google.android.gms:play-services-ads:25.4.0")
+    implementation(libs.play.services.ads)
 
     //QR scanner
-    implementation("me.dm7.barcodescanner:zxing:1.9.8")
+    implementation(project(":barcodescanner:zxing"))
+    implementation(project(":barcodescanner:core"))
+    implementation(libs.zxing.core)
 
-    testImplementation("junit:junit:4.13.2")
-    androidTestImplementation("androidx.test.ext:junit:1.3.0")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
 }

@@ -10,11 +10,11 @@
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/colorPrimaryDark"
+        android:background="?attr/colorPrimary"
         app:navigationIcon="@drawable/ic_back"
         app:title="@string/title_qr_generator"
         app:titleCentered="true"
-        app:titleTextColor="#fff" />
+        app:titleTextColor="?attr/colorOnPrimary" />
 
     <ScrollView
         android:id="@+id/contentContainer"
@@ -55,8 +55,9 @@
                         android:hint="@string/hint_qr_code_generate_hint"
                         android:minLines="2"
                         android:padding="8dp"
-                        android:textColor="#fff"
-                        android:textColorHint="#afff" />
+                        android:textColor="?attr/colorOnSurface"
+                        android:textColorHint="?attr/colorOnSurface"
+                        android:alpha="0.7" />
 
                     <ImageButton
                         android:id="@+id/btn_clear"
@@ -76,13 +77,13 @@
                     android:layout_marginTop="12dp"
                     android:layout_marginEnd="8dp"
                     android:layout_marginBottom="8dp"
-                    android:backgroundTint="#2196F3"
+                    android:backgroundTint="?attr/colorPrimary"
                     android:text="@string/generate"
                     android:textAllCaps="true"
-                    android:textColor="#fff"
-                    app:elevation="8dp"
+                    android:textColor="?attr/colorOnPrimary"
+                    app:elevation="4dp"
                     app:cornerRadius="8dp"
-                    app:rippleColor="@color/colorPrimaryDark"  />
+                    app:rippleColor="?attr/colorPrimaryVariant"  />
 
                 <ImageView
                     android:id="@+id/imgQRCode"

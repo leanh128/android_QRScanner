@@ -15,4 +15,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "QRScanner"
 include(":app")
- 
+include(":barcodescanner:core")
+include(":barcodescanner:zxing")

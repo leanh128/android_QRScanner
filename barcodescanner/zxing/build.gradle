@@ -1,0 +1,15 @@
+apply plugin: 'com.android.library'
+
+android {
+    namespace 'me.dm7.barcodescanner.zxing'
+    compileSdk 37
+
+    defaultConfig {
+        minSdk 23
+    }
+}
+
+dependencies {
+    api project(":barcodescanner:core")
+    implementation libs.zxing.core
+}
