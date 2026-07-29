@@ -8,7 +8,7 @@ android {
 
     defaultConfig {
         applicationId = "com.vn.qrscanner"
-        minSdk = 23
+        minSdk = 28
         targetSdk = 37
         versionCode = 10
         versionName = "3.0"
@@ -51,8 +51,7 @@ dependencies {
     implementation(libs.play.services.ads)
 
     //QR scanner
-    implementation(project(":barcodescanner:zxing"))
-    implementation(project(":barcodescanner:core"))
+    implementation(project(":barcodescanner"))
     implementation(libs.zxing.core)
 
     testImplementation(libs.junit)

@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
+import com.google.zxing.Result
 import com.google.zxing.ResultMetadataType
 import com.vn.qrscanner.databinding.ActivityScanBinding
 import com.vn.qrscanner.features.generator.QRGeneratorActivity
@@ -14,25 +15,41 @@ import com.vn.qrscanner.utils.PermissionUtil
 import me.dm7.barcodescanner.zxing.ZXingScannerView
 
 class ScanActivity : AppCompatActivity() {
-    private val viewBinding: ActivityScanBinding by lazy { ActivityScanBinding.inflate(layoutInflater) }
-    private val scanResultHandler by lazy {
-        ZXingScannerView.ResultHandler { scanResult ->
-            val country = (scanResult.resultMetadata?.get(ResultMetadataType.POSSIBLE_COUNTRY) as? String) ?: ""
-            ScanResultActivity.showResultActivity(this, scanResult.text, country)
-            viewBinding.scannerCamera.stopCamera()
+    private val viewBinding: ActivityScanBinding by lazy {
+        ActivityScanBinding.inflate(
+            layoutInflater
+        )
+    }
+    private val scanResultHandler: ZXingScannerView.ResultHandler by lazy {
+        object : ZXingScannerView.ResultHandler {
+            override fun handleResult(rawResult: Result?) {
+                val country =
+                    (rawResult?.resultMetadata?.get(ResultMetadataType.POSSIBLE_COUNTRY) as? String)
+                        ?: ""
+                ScanResultActivity.showResultActivity(this@ScanActivity, rawResult?.text, country)
+                viewBinding.scannerCamera.stopCamera()
+            }
         }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (!PermissionUtil.verifyPermission(this, Manifest.permission.CAMERA)) {
-            PermissionUtil.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), REQUEST_CODE_CAMERA)
+            PermissionUtil.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.CAMERA),
+                REQUEST_CODE_CAMERA
+            )
         } else {
             initView()
         }
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray
+    ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_CODE_CAMERA) {
             for (i in permissions.indices) {
