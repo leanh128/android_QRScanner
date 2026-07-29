@@ -6,7 +6,7 @@ import android.os.Looper
 
 
 // This code is mostly based on the top answer here: http://stackoverflow.com/questions/18149964/best-use-of-handlerthread-over-other-similar-classes
-class CameraHandlerThread(private val mScannerView: BarcodeScannerView) :
+class CameraHandlerThread(private val mCameraView: CameraView) :
     HandlerThread("CameraHandlerThread") {
     init {
         start()
@@ -18,7 +18,7 @@ class CameraHandlerThread(private val mScannerView: BarcodeScannerView) :
             val camera = CameraUtils.getCameraInstance(cameraId)
             val mainHandler = Handler(Looper.getMainLooper())
             mainHandler.post {
-                mScannerView.setupCameraPreview(
+                mCameraView.setupCameraPreview(
                     CameraWrapper.getWrapper(
                         camera,
                         cameraId

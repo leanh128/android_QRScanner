@@ -14,17 +14,13 @@ import android.view.View
 import me.dm7.barcodescanner.R
 import me.dm7.barcodescanner.core.DisplayUtils.getScreenOrientation
 
-class ViewFinderView: View, IViewFinder {
-    override var framingRect: Rect? = null
+open class ViewFinderView: View {
+    var framingRect: Rect? = null
         private set
-    override val viewWidth: Int
-        get() = this.width
-    override val viewHeight: Int
-        get() = this.height
     private var scannerAlpha = 0
-    private val mDefaultLaserColor = getResources().getColor(R.color.viewfinder_laser)
-    private val mDefaultMaskColor = getResources().getColor(R.color.viewfinder_mask)
-    private val mDefaultBorderColor = getResources().getColor(R.color.viewfinder_border)
+    private val mDefaultLaserColor = resources.getColor(R.color.viewfinder_laser)
+    private val mDefaultMaskColor = resources.getColor(R.color.viewfinder_mask)
+    private val mDefaultBorderColor = resources.getColor(R.color.viewfinder_border)
     private val mDefaultBorderStrokeWidth =
         getResources().getInteger(R.integer.viewfinder_border_width)
     private val mDefaultBorderLineLength =
@@ -34,8 +30,8 @@ class ViewFinderView: View, IViewFinder {
     protected var mFinderMaskPaint: Paint? = null
     protected var mBorderPaint: Paint? = null
     protected var mBorderLineLength: Int = 0
-    protected var mSquareViewFinder: Boolean = false
-    private var mIsLaserEnabled = false
+    protected var mSquareViewFinder: Boolean = true
+    private var mIsLaserEnabled = true
     private var mBordersAlpha = 0f
     private var mViewFinderOffset = 0
 
@@ -67,31 +63,31 @@ class ViewFinderView: View, IViewFinder {
         mBorderLineLength = mDefaultBorderLineLength
     }
 
-    override fun setLaserColor(laserColor: Int) {
+    fun setLaserColor(laserColor: Int) {
         mLaserPaint!!.setColor(laserColor)
     }
 
-    override fun setMaskColor(maskColor: Int) {
+    fun setMaskColor(maskColor: Int) {
         mFinderMaskPaint!!.setColor(maskColor)
     }
 
-    override fun setBorderColor(borderColor: Int) {
+    fun setBorderColor(borderColor: Int) {
         mBorderPaint!!.setColor(borderColor)
     }
 
-    override fun setBorderStrokeWidth(borderStrokeWidth: Int) {
+    fun setBorderStrokeWidth(borderStrokeWidth: Int) {
         mBorderPaint!!.setStrokeWidth(borderStrokeWidth.toFloat())
     }
 
-    override fun setBorderLineLength(borderLineLength: Int) {
+    fun setBorderLineLength(borderLineLength: Int) {
         mBorderLineLength = borderLineLength
     }
 
-    override fun setLaserEnabled(isLaserEnabled: Boolean) {
+    fun setLaserEnabled(isLaserEnabled: Boolean) {
         mIsLaserEnabled = isLaserEnabled
     }
 
-    override fun setBorderCornerRounded(isBorderCornersRounded: Boolean) {
+    fun setBorderCornerRounded(isBorderCornersRounded: Boolean) {
         if (isBorderCornersRounded) {
             mBorderPaint!!.setStrokeJoin(Paint.Join.ROUND)
         } else {
@@ -99,26 +95,26 @@ class ViewFinderView: View, IViewFinder {
         }
     }
 
-    override fun setBorderAlpha(alpha: Float) {
+    fun setBorderAlpha(alpha: Float) {
         val colorAlpha = (255 * alpha).toInt()
         mBordersAlpha = alpha
         mBorderPaint!!.setAlpha(colorAlpha)
     }
 
-    override fun setBorderCornerRadius(borderCornersRadius: Int) {
+    fun setBorderCornerRadius(borderCornersRadius: Int) {
         mBorderPaint!!.setPathEffect(CornerPathEffect(borderCornersRadius.toFloat()))
     }
 
-    override fun setViewFinderOffset(offset: Int) {
+    fun setViewFinderOffset(offset: Int) {
         mViewFinderOffset = offset
     }
 
     // TODO: Need a better way to configure this. Revisit when working on 2.0
-    override fun setSquareViewFinder(set: Boolean) {
+    fun setSquareViewFinder(set: Boolean) {
         mSquareViewFinder = set
     }
 
-    override fun setupViewFinder() {
+    fun setupViewFinder() {
         updateFramingRect()
         invalidate()
     }
@@ -129,7 +125,7 @@ class ViewFinderView: View, IViewFinder {
         }
 
         drawViewFinderMask(canvas)
-        drawViewFinderBorder(canvas)
+        // drawViewFinderBorder(canvas)
 
         if (mIsLaserEnabled) {
             drawLaser(canvas)
@@ -291,18 +287,17 @@ class ViewFinderView: View, IViewFinder {
     companion object {
         private const val TAG = "ViewFinderView"
 
-        private val PORTRAIT_WIDTH_RATIO = 6f / 8
-        private const val PORTRAIT_WIDTH_HEIGHT_RATIO = 0.75f
+        private val PORTRAIT_WIDTH_RATIO = 7.5f / 8
+        private const val PORTRAIT_WIDTH_HEIGHT_RATIO = 1.0f
 
-        private val LANDSCAPE_HEIGHT_RATIO = 5f / 8
-        private const val LANDSCAPE_WIDTH_HEIGHT_RATIO = 1.4f
-        private const val MIN_DIMENSION_DIFF = 50
+        private val LANDSCAPE_HEIGHT_RATIO = 7.5f / 8
+        private const val LANDSCAPE_WIDTH_HEIGHT_RATIO = 1.0f
+        private const val MIN_DIMENSION_DIFF = 10
 
-        private val DEFAULT_SQUARE_DIMENSION_RATIO = 5f / 8
+        private val DEFAULT_SQUARE_DIMENSION_RATIO = 7.5f / 8
 
         private val SCANNER_ALPHA = intArrayOf(0, 64, 128, 192, 255, 192, 128, 64)
         private const val POINT_SIZE = 10
         private const val ANIMATION_DELAY = 80L
     }
 }
-

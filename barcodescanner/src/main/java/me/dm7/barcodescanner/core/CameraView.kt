@@ -7,16 +7,24 @@ import android.hardware.Camera
 import android.hardware.Camera.PreviewCallback
 import android.util.AttributeSet
 import android.view.Gravity
-import android.view.View
 import android.widget.FrameLayout
 import android.widget.RelativeLayout
 import androidx.annotation.ColorInt
 import me.dm7.barcodescanner.R
 
-abstract class BarcodeScannerView : FrameLayout, PreviewCallback {
+open class CameraView @JvmOverloads constructor(
+    context: Context,
+    attributeSet: AttributeSet? = null,
+    defStyleAttr: Int = 0
+) : FrameLayout(context, attributeSet, defStyleAttr), PreviewCallback {
+
+    interface CameraPreviewListener {
+        fun onPreviewFrame(data: ByteArray, width: Int, height: Int, camera: Camera)
+    }
+
     private var mCameraWrapper: CameraWrapper? = null
     private var mPreview: CameraPreview? = null
-    private var mViewFinderView: IViewFinder? = null
+    private var mViewFinderView: ViewFinderView? = null
     private var mFramingRectInPreview: Rect? = null
     private var mCameraHandlerThread: CameraHandlerThread? = null
     private var mFlashState: Boolean? = null
@@ -26,25 +34,23 @@ abstract class BarcodeScannerView : FrameLayout, PreviewCallback {
     private var mIsLaserEnabled = true
 
     @ColorInt
-    private var mLaserColor = getResources().getColor(R.color.viewfinder_laser)
+    private var mLaserColor = resources.getColor(R.color.viewfinder_laser)
 
     @ColorInt
-    private var mBorderColor = getResources().getColor(R.color.viewfinder_border)
-    private var mMaskColor = getResources().getColor(R.color.viewfinder_mask)
-    private var mBorderWidth = getResources().getInteger(R.integer.viewfinder_border_width)
-    private var mBorderLength = getResources().getInteger(R.integer.viewfinder_border_length)
+    private var mBorderColor = resources.getColor(R.color.viewfinder_border)
+    private var mMaskColor = resources.getColor(R.color.viewfinder_mask)
+    private var mBorderWidth = resources.getInteger(R.integer.viewfinder_border_width)
+    private var mBorderLength = resources.getInteger(R.integer.viewfinder_border_length)
     private var mRoundedCorner = false
     private var mCornerRadius = 0
-    private var mSquaredFinder = false
+    private var mSquaredFinder = true
     private var mBorderAlpha = 1.0f
     private var mViewFinderOffset = 0
     private var mAspectTolerance = 0.1f
 
-    constructor(context: Context) : super(context) {
-        init()
-    }
+    private var mCameraPreviewListener: CameraPreviewListener? = null
 
-    constructor(context: Context, attributeSet: AttributeSet?) : super(context, attributeSet) {
+    init {
         val a = context.getTheme().obtainStyledAttributes(
             attributeSet,
             R.styleable.BarcodeScannerView,
@@ -83,10 +89,6 @@ abstract class BarcodeScannerView : FrameLayout, PreviewCallback {
             a.recycle()
         }
 
-        init()
-    }
-
-    private fun init() {
         mViewFinderView = createViewFinderView(getContext())
     }
 
@@ -106,26 +108,12 @@ abstract class BarcodeScannerView : FrameLayout, PreviewCallback {
             addView(mPreview)
         }
 
-        if (mViewFinderView is View) {
-            addView(mViewFinderView as View)
-        } else {
-            throw IllegalArgumentException(
-                "IViewFinder object returned by " +
-                        "'createViewFinderView()' should be instance of android.view.View"
-            )
+        if (mViewFinderView != null) {
+            addView(mViewFinderView)
         }
     }
 
-    /**
-     * 
-     * Method that creates view that represents visual appearance of a barcode scanner
-     * 
-     * Override it to provide your own view for visual appearance of a barcode scanner
-     * 
-     * @param context [Context]
-     * @return [View] that implements [ViewFinderView]
-     */
-    protected fun createViewFinderView(context: Context?): IViewFinder {
+    protected fun createViewFinderView(context: Context?): ViewFinderView {
         val viewFinderView = ViewFinderView(context)
         viewFinderView.setBorderColor(mBorderColor)
         viewFinderView.setLaserColor(mLaserColor)
@@ -141,64 +129,30 @@ abstract class BarcodeScannerView : FrameLayout, PreviewCallback {
         return viewFinderView
     }
 
-    fun zsetLaserColor(laserColor: Int) {
-        mLaserColor = laserColor
-        mViewFinderView!!.setLaserColor(mLaserColor)
-        mViewFinderView!!.setupViewFinder()
+    fun setCameraPreviewListener(listener: CameraPreviewListener?) {
+        mCameraPreviewListener = listener
     }
 
-    fun setMaskColor(maskColor: Int) {
-        mMaskColor = maskColor
-        mViewFinderView!!.setMaskColor(mMaskColor)
-        mViewFinderView!!.setupViewFinder()
-    }
+    override fun onPreviewFrame(data: ByteArray, camera: Camera) {
+        if (mCameraPreviewListener == null) return
 
-    fun setBorderColor(borderColor: Int) {
-        mBorderColor = borderColor
-        mViewFinderView!!.setBorderColor(mBorderColor)
-        mViewFinderView!!.setupViewFinder()
-    }
+        val parameters = camera.parameters
+        val size = parameters.previewSize
+        var width = size.width
+        var height = size.height
 
-    fun setBorderStrokeWidth(borderStrokeWidth: Int) {
-        mBorderWidth = borderStrokeWidth
-        mViewFinderView!!.setBorderStrokeWidth(mBorderWidth)
-        mViewFinderView!!.setupViewFinder()
-    }
+        var rotatedData = data
+        if (resources.configuration.orientation == android.content.res.Configuration.ORIENTATION_PORTRAIT) {
+            val rotationCount = rotationCount
+            if (rotationCount == 1 || rotationCount == 3) {
+                val tmp = width
+                width = height
+                height = tmp
+            }
+            rotatedData = getRotatedData(data, camera)
+        }
 
-    fun setBorderLineLength(borderLineLength: Int) {
-        mBorderLength = borderLineLength
-        mViewFinderView!!.setBorderLineLength(mBorderLength)
-        mViewFinderView!!.setupViewFinder()
-    }
-
-    fun setLaserEnabled(isLaserEnabled: Boolean) {
-        mIsLaserEnabled = isLaserEnabled
-        mViewFinderView!!.setLaserEnabled(mIsLaserEnabled)
-        mViewFinderView!!.setupViewFinder()
-    }
-
-    fun setIsBorderCornerRounded(isBorderCornerRounded: Boolean) {
-        mRoundedCorner = isBorderCornerRounded
-        mViewFinderView!!.setBorderCornerRounded(mRoundedCorner)
-        mViewFinderView!!.setupViewFinder()
-    }
-
-    fun setBorderCornerRadius(borderCornerRadius: Int) {
-        mCornerRadius = borderCornerRadius
-        mViewFinderView!!.setBorderCornerRadius(mCornerRadius)
-        mViewFinderView!!.setupViewFinder()
-    }
-
-    fun setSquareViewFinder(isSquareViewFinder: Boolean) {
-        mSquaredFinder = isSquareViewFinder
-        mViewFinderView!!.setSquareViewFinder(mSquaredFinder)
-        mViewFinderView!!.setupViewFinder()
-    }
-
-    fun setBorderAlpha(borderAlpha: Float) {
-        mBorderAlpha = borderAlpha
-        mViewFinderView!!.setBorderAlpha(mBorderAlpha)
-        mViewFinderView!!.setupViewFinder()
+        mCameraPreviewListener?.onPreviewFrame(rotatedData, width, height, camera)
     }
 
     @JvmOverloads
@@ -240,18 +194,12 @@ abstract class BarcodeScannerView : FrameLayout, PreviewCallback {
         }
     }
 
-    protected fun resumeCameraPreview() {
-        if (mPreview != null) {
-            mPreview!!.showCameraPreview()
-        }
-    }
-
     @Synchronized
     fun getFramingRectInPreview(previewWidth: Int, previewHeight: Int): Rect? {
         if (mFramingRectInPreview == null) {
             val framingRect = mViewFinderView!!.framingRect
-            val viewFinderViewWidth = mViewFinderView!!.viewWidth
-            val viewFinderViewHeight = mViewFinderView!!.viewHeight
+            val viewFinderViewWidth = mViewFinderView!!.width
+            val viewFinderViewHeight = mViewFinderView!!.height
             if (framingRect == null || viewFinderViewWidth == 0 || viewFinderViewHeight == 0) {
                 return null
             }
@@ -276,19 +224,19 @@ abstract class BarcodeScannerView : FrameLayout, PreviewCallback {
     fun setFlash(flag: Boolean) {
         mFlashState = flag
         if (mCameraWrapper != null && CameraUtils.isFlashSupported(mCameraWrapper!!.mCamera)) {
-            val parameters = mCameraWrapper!!.mCamera.getParameters()
+            val parameters = mCameraWrapper!!.mCamera.parameters
             if (flag) {
-                if (parameters.getFlashMode() == Camera.Parameters.FLASH_MODE_TORCH) {
+                if (parameters.flashMode == Camera.Parameters.FLASH_MODE_TORCH) {
                     return
                 }
-                parameters.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH)
+                parameters.flashMode = Camera.Parameters.FLASH_MODE_TORCH
             } else {
-                if (parameters.getFlashMode() == Camera.Parameters.FLASH_MODE_OFF) {
+                if (parameters.flashMode == Camera.Parameters.FLASH_MODE_OFF) {
                     return
                 }
-                parameters.setFlashMode(Camera.Parameters.FLASH_MODE_OFF)
+                parameters.flashMode = Camera.Parameters.FLASH_MODE_OFF
             }
-            mCameraWrapper!!.mCamera.setParameters(parameters)
+            mCameraWrapper!!.mCamera.parameters = parameters
         }
     }
 
@@ -335,8 +283,8 @@ abstract class BarcodeScannerView : FrameLayout, PreviewCallback {
 
     val rotationCount: Int
         get() {
+            if (mPreview == null) return 0
             val displayOrientation = mPreview!!.displayOrientation
             return displayOrientation / 90
         }
 }
-

@@ -1,7 +1,6 @@
 package me.dm7.barcodescanner.core
 
 import android.content.Context
-import android.content.res.Configuration
 import android.graphics.Point
 import android.hardware.Camera
 import android.hardware.Camera.AutoFocusCallback
@@ -15,6 +14,7 @@ import android.view.SurfaceView
 import android.view.View
 import android.view.WindowManager
 import kotlin.math.abs
+import kotlin.math.roundToInt
 
 class CameraPreview : SurfaceView, SurfaceHolder.Callback {
     private var mCameraWrapper: CameraWrapper? = null
@@ -84,10 +84,10 @@ class CameraPreview : SurfaceView, SurfaceHolder.Callback {
     fun showCameraPreview() {
         if (mCameraWrapper != null) {
             try {
-                getHolder().addCallback(this)
+                holder.addCallback(this)
                 mPreviewing = true
                 setupCameraParameters()
-                mCameraWrapper!!.mCamera.setPreviewDisplay(getHolder())
+                mCameraWrapper!!.mCamera.setPreviewDisplay(holder)
                 mCameraWrapper!!.mCamera.setDisplayOrientation(this.displayOrientation)
                 mCameraWrapper!!.mCamera.setOneShotPreviewCallback(mPreviewCallback)
                 mCameraWrapper!!.mCamera.startPreview()
@@ -118,7 +118,7 @@ class CameraPreview : SurfaceView, SurfaceHolder.Callback {
         if (mCameraWrapper != null) {
             try {
                 mPreviewing = false
-                getHolder().removeCallback(this)
+                holder.removeCallback(this)
                 mCameraWrapper!!.mCamera.cancelAutoFocus()
                 mCameraWrapper!!.mCamera.setOneShotPreviewCallback(null)
                 mCameraWrapper!!.mCamera.stopPreview()
@@ -130,14 +130,14 @@ class CameraPreview : SurfaceView, SurfaceHolder.Callback {
 
     fun setupCameraParameters() {
         val optimalSize = this.optimalPreviewSize
-        val parameters = mCameraWrapper!!.mCamera.getParameters()
+        val parameters = mCameraWrapper!!.mCamera.parameters
         parameters.setPreviewSize(optimalSize!!.width, optimalSize.height)
-        mCameraWrapper!!.mCamera.setParameters(parameters)
+        mCameraWrapper!!.mCamera.parameters = parameters
         adjustViewSize(optimalSize)
     }
 
     private fun adjustViewSize(cameraSize: Camera.Size) {
-        val previewSize = convertSizeToLandscapeOrientation(Point(getWidth(), getHeight()))
+        val previewSize = convertSizeToLandscapeOrientation(Point(width, height))
         val cameraRatio = (cameraSize.width.toFloat()) / cameraSize.height
         val screenRatio = (previewSize.x.toFloat()) / previewSize.y
 
@@ -149,10 +149,10 @@ class CameraPreview : SurfaceView, SurfaceHolder.Callback {
     }
 
     private fun convertSizeToLandscapeOrientation(size: Point): Point {
-        if (this.displayOrientation % 180 == 0) {
-            return size
+        return if (this.displayOrientation % 180 == 0) {
+            size
         } else {
-            return Point(size.y, size.x)
+            Point(size.y, size.x)
         }
     }
 
@@ -169,8 +169,8 @@ class CameraPreview : SurfaceView, SurfaceHolder.Callback {
         }
 
         if (mShouldScaleToFill) {
-            val parentWidth = (getParent() as View).getWidth()
-            val parentHeight = (getParent() as View).getHeight()
+            val parentWidth = (parent as View).width
+            val parentHeight = (parent as View).height
             val ratioWidth = parentWidth.toFloat() / tmpWidth.toFloat()
             val ratioHeight = parentHeight.toFloat() / tmpHeight.toFloat()
 
@@ -182,8 +182,8 @@ class CameraPreview : SurfaceView, SurfaceHolder.Callback {
                 compensation = ratioHeight
             }
 
-            tmpWidth = Math.round(tmpWidth * compensation)
-            tmpHeight = Math.round(tmpHeight * compensation)
+            tmpWidth = (tmpWidth * compensation).roundToInt()
+            tmpHeight = (tmpHeight * compensation).roundToInt()
         }
 
         layoutParams.width = tmpWidth
@@ -239,40 +239,18 @@ class CameraPreview : SurfaceView, SurfaceHolder.Callback {
 
             val sizes =
                 mCameraWrapper!!.mCamera.getParameters().getSupportedPreviewSizes()
-            var w = getWidth()
-            var h = getHeight()
-            if (DisplayUtils.getScreenOrientation(getContext()) == Configuration.ORIENTATION_PORTRAIT) {
-                val portraitWidth = h
-                h = w
-                w = portraitWidth
-            }
-
-            val targetRatio = w.toDouble() / h
+            val targetRatio = 1.0 // Prefer square
             if (sizes == null) return null
 
             var optimalSize: Camera.Size? = null
             var minDiff = Double.MAX_VALUE
 
-            val targetHeight = h
-
             // Try to find an size match aspect ratio and size
             for (size in sizes) {
                 val ratio = size.width.toDouble() / size.height
-                if (abs(ratio - targetRatio) > mAspectTolerance) continue
-                if (abs(size.height - targetHeight) < minDiff) {
+                if (abs(ratio - targetRatio) < minDiff) {
                     optimalSize = size
-                    minDiff = abs(size.height - targetHeight).toDouble()
-                }
-            }
-
-            // Cannot find the one match the aspect ratio, ignore the requirement
-            if (optimalSize == null) {
-                minDiff = Double.MAX_VALUE
-                for (size in sizes) {
-                    if (abs(size.height - targetHeight) < minDiff) {
-                        optimalSize = size
-                        minDiff = abs(size.height - targetHeight).toDouble()
-                    }
+                    minDiff = abs(ratio - targetRatio)
                 }
             }
             return optimalSize
