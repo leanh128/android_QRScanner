@@ -46,19 +46,19 @@ open class ViewFinderView: View {
     private fun init() {
         //set up laser paint
         mLaserPaint = Paint()
-        mLaserPaint!!.setColor(mDefaultLaserColor)
-        mLaserPaint!!.setStyle(Paint.Style.FILL)
+        mLaserPaint!!.color = mDefaultLaserColor
+        mLaserPaint!!.style = Paint.Style.FILL
 
         //finder mask paint
         mFinderMaskPaint = Paint()
-        mFinderMaskPaint!!.setColor(mDefaultMaskColor)
+        mFinderMaskPaint!!.color = mDefaultMaskColor
 
         //border paint
         mBorderPaint = Paint()
-        mBorderPaint!!.setColor(mDefaultBorderColor)
-        mBorderPaint!!.setStyle(Paint.Style.STROKE)
-        mBorderPaint!!.setStrokeWidth(mDefaultBorderStrokeWidth.toFloat())
-        mBorderPaint!!.setAntiAlias(true)
+        mBorderPaint!!.color = mDefaultBorderColor
+        mBorderPaint!!.style = Paint.Style.STROKE
+        mBorderPaint!!.strokeWidth = mDefaultBorderStrokeWidth.toFloat()
+        mBorderPaint!!.isAntiAlias = true
 
         mBorderLineLength = mDefaultBorderLineLength
     }
@@ -89,20 +89,20 @@ open class ViewFinderView: View {
 
     fun setBorderCornerRounded(isBorderCornersRounded: Boolean) {
         if (isBorderCornersRounded) {
-            mBorderPaint!!.setStrokeJoin(Paint.Join.ROUND)
+            mBorderPaint!!.strokeJoin = Paint.Join.ROUND
         } else {
-            mBorderPaint!!.setStrokeJoin(Paint.Join.BEVEL)
+            mBorderPaint!!.strokeJoin = Paint.Join.BEVEL
         }
     }
 
     fun setBorderAlpha(alpha: Float) {
         val colorAlpha = (255 * alpha).toInt()
         mBordersAlpha = alpha
-        mBorderPaint!!.setAlpha(colorAlpha)
+        mBorderPaint!!.alpha = colorAlpha
     }
 
     fun setBorderCornerRadius(borderCornersRadius: Int) {
-        mBorderPaint!!.setPathEffect(CornerPathEffect(borderCornersRadius.toFloat()))
+        mBorderPaint!!.pathEffect = CornerPathEffect(borderCornersRadius.toFloat())
     }
 
     fun setViewFinderOffset(offset: Int) {
