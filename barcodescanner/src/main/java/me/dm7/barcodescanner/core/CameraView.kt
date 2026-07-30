@@ -5,10 +5,15 @@ import android.content.Context
 import android.graphics.Rect
 import android.graphics.RectF
 import android.util.AttributeSet
-import android.util.Size
 import android.widget.FrameLayout
 import androidx.annotation.ColorInt
-import androidx.camera.core.*
+import androidx.camera.core.AspectRatio
+import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.ImageProxy
+import androidx.camera.core.Preview
+import androidx.camera.core.UseCaseGroup
+import androidx.camera.core.resolutionselector.AspectRatioStrategy
+import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import me.dm7.barcodescanner.R
@@ -31,6 +36,7 @@ open class CameraView @JvmOverloads constructor(
 
     @ColorInt
     private var mLaserColor = ContextCompat.getColor(context, R.color.viewfinder_laser)
+
     @ColorInt
     private var mBorderColor = ContextCompat.getColor(context, R.color.viewfinder_border)
     private var mMaskColor = ContextCompat.getColor(context, R.color.viewfinder_mask)
@@ -41,6 +47,7 @@ open class CameraView @JvmOverloads constructor(
     private var mSquaredFinder = true
     private var mBorderAlpha = 1.0f
     private var mViewFinderOffset = 0
+    private var mTargetAspectRatio: Int = AspectRatio.RATIO_4_3
 
     init {
         val a = context.theme.obtainStyledAttributes(
@@ -50,17 +57,26 @@ open class CameraView @JvmOverloads constructor(
         )
 
         try {
-            mIsLaserEnabled = a.getBoolean(R.styleable.BarcodeScannerView_laserEnabled, mIsLaserEnabled)
+            mIsLaserEnabled =
+                a.getBoolean(R.styleable.BarcodeScannerView_laserEnabled, mIsLaserEnabled)
             mLaserColor = a.getColor(R.styleable.BarcodeScannerView_laserColor, mLaserColor)
             mBorderColor = a.getColor(R.styleable.BarcodeScannerView_borderColor, mBorderColor)
             mMaskColor = a.getColor(R.styleable.BarcodeScannerView_maskColor, mMaskColor)
-            mBorderWidth = a.getDimensionPixelSize(R.styleable.BarcodeScannerView_borderWidth, mBorderWidth)
-            mBorderLength = a.getDimensionPixelSize(R.styleable.BarcodeScannerView_borderLength, mBorderLength)
-            mRoundedCorner = a.getBoolean(R.styleable.BarcodeScannerView_roundedCorner, mRoundedCorner)
-            mCornerRadius = a.getDimensionPixelSize(R.styleable.BarcodeScannerView_cornerRadius, mCornerRadius)
-            mSquaredFinder = a.getBoolean(R.styleable.BarcodeScannerView_squaredFinder, mSquaredFinder)
+            mBorderWidth =
+                a.getDimensionPixelSize(R.styleable.BarcodeScannerView_borderWidth, mBorderWidth)
+            mBorderLength =
+                a.getDimensionPixelSize(R.styleable.BarcodeScannerView_borderLength, mBorderLength)
+            mRoundedCorner =
+                a.getBoolean(R.styleable.BarcodeScannerView_roundedCorner, mRoundedCorner)
+            mCornerRadius =
+                a.getDimensionPixelSize(R.styleable.BarcodeScannerView_cornerRadius, mCornerRadius)
+            mSquaredFinder =
+                a.getBoolean(R.styleable.BarcodeScannerView_squaredFinder, mSquaredFinder)
             mBorderAlpha = a.getFloat(R.styleable.BarcodeScannerView_borderAlpha, mBorderAlpha)
-            mViewFinderOffset = a.getDimensionPixelSize(R.styleable.BarcodeScannerView_finderOffset, mViewFinderOffset)
+            mViewFinderOffset = a.getDimensionPixelSize(
+                R.styleable.BarcodeScannerView_finderOffset,
+                mViewFinderOffset
+            )
         } finally {
             a.recycle()
         }
@@ -86,13 +102,24 @@ open class CameraView @JvmOverloads constructor(
     }
 
     fun setupCamera(listener: CameraPreviewListener): UseCaseGroup {
-        val preview = Preview.Builder().build().also {
-            it.surfaceProvider = mPreviewView.surfaceProvider
-        }
+        val resolutionSelector = ResolutionSelector.Builder()
+            .setAspectRatioStrategy(
+                AspectRatioStrategy(
+                    mTargetAspectRatio,
+                    AspectRatioStrategy.FALLBACK_RULE_AUTO
+                )
+            )
+            .build()
+
+        val preview = Preview.Builder()
+            .setResolutionSelector(resolutionSelector)
+            .build().also {
+                it.surfaceProvider = mPreviewView.surfaceProvider
+            }
 
         val imageAnalysis = ImageAnalysis.Builder()
             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-            .setTargetResolution(Size(1080, 1080))
+            .setResolutionSelector(resolutionSelector)
             .build()
             .also {
                 it.setAnalyzer(ContextCompat.getMainExecutor(context)) { imageProxy ->
@@ -114,13 +141,13 @@ open class CameraView @JvmOverloads constructor(
     @SuppressLint("UnsafeOptInUsageError")
     private fun processImageProxy(imageProxy: ImageProxy, listener: CameraPreviewListener) {
         val rotationDegrees = imageProxy.imageInfo.rotationDegrees
-        
+
         val yPlane = imageProxy.planes[0]
         val yBuffer = yPlane.buffer
         val width = imageProxy.width
         val height = imageProxy.height
         val rowStride = yPlane.rowStride
-        
+
         val yBytes = ByteArray(width * height)
         for (row in 0 until height) {
             yBuffer.position(row * rowStride)
@@ -173,11 +200,25 @@ open class CameraView @JvmOverloads constructor(
         mFlashState = flag
     }
 
+    fun setTargetAspectRatio(ratio: Int) {
+        mTargetAspectRatio = ratio
+    }
+
+    fun setCustomEdgeOffset(offset: Int) {
+        mViewFinderView?.setCustomEdgeOffset(offset)
+    }
+
+    fun setInvertColor(invert: Boolean) {
+        mViewFinderView?.setInvertColor(invert)
+    }
+
+    fun getPreviewView(): PreviewView = mPreviewView
+
     fun getFramingRectInPreview(previewWidth: Int, previewHeight: Int): Rect? {
         val framingRect = mViewFinderView?.framingRect ?: return null
         val viewWidth = width
         val viewHeight = height
-        
+
         if (viewWidth <= 0 || viewHeight <= 0) return null
 
         val rect = RectF(
@@ -195,7 +236,7 @@ open class CameraView @JvmOverloads constructor(
         mappedRect.top = (rect.top * scaleY).toInt()
         mappedRect.right = (rect.right * scaleX).toInt()
         mappedRect.bottom = (rect.bottom * scaleY).toInt()
-        
+
         return mappedRect
     }
 

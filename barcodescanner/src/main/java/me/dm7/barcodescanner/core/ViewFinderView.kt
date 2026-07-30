@@ -14,7 +14,7 @@ import android.view.View
 import me.dm7.barcodescanner.R
 import me.dm7.barcodescanner.core.DisplayUtils.getScreenOrientation
 
-open class ViewFinderView: View {
+open class ViewFinderView : View {
     var framingRect: Rect? = null
         private set
     private var scannerAlpha = 0
@@ -34,6 +34,8 @@ open class ViewFinderView: View {
     private var mIsLaserEnabled = true
     private var mBordersAlpha = 0f
     private var mViewFinderOffset = 0
+    private var mCustomEdgeOffset = -1
+    private var mInvertColor = false
 
     constructor(context: Context?) : super(context) {
         init()
@@ -107,6 +109,16 @@ open class ViewFinderView: View {
 
     fun setViewFinderOffset(offset: Int) {
         mViewFinderOffset = offset
+    }
+
+    fun setCustomEdgeOffset(offset: Int) {
+        mCustomEdgeOffset = offset
+    }
+
+    fun setInvertColor(invert: Boolean) {
+        mInvertColor = invert
+        mFinderMaskPaint?.color = if (invert) android.graphics.Color.WHITE else mDefaultMaskColor
+        invalidate()
     }
 
     // TODO: Need a better way to configure this. Revisit when working on 2.0
@@ -239,12 +251,20 @@ open class ViewFinderView: View {
 
     @Synchronized
     fun updateFramingRect() {
-        val viewResolution = Point(getWidth(), getHeight())
+        val viewResolution = Point(width, height)
         var width: Int
         var height: Int
-        val orientation = getScreenOrientation(getContext())
+        val orientation = getScreenOrientation(context)
 
-        if (mSquareViewFinder) {
+        if (mCustomEdgeOffset >= 0) {
+            val size = if (viewResolution.x < viewResolution.y) {
+                viewResolution.x - 2 * mCustomEdgeOffset
+            } else {
+                viewResolution.y - 2 * mCustomEdgeOffset
+            }
+            width = size
+            height = size
+        } else if (mSquareViewFinder) {
             if (orientation != Configuration.ORIENTATION_PORTRAIT) {
                 height = (getHeight() * DEFAULT_SQUARE_DIMENSION_RATIO).toInt()
                 width = height
@@ -273,8 +293,7 @@ open class ViewFinderView: View {
         val leftOffset = (viewResolution.x - width) / 2
         val topOffset = (viewResolution.y - height) / 2
         Log.d(
-            "ViewFinderView",
-            "Framing rect: " + leftOffset + ", " + topOffset + ", " + width + ", " + height
+            "ViewFinderView", "Framing rect: $leftOffset, $topOffset, $width, $height"
         )
         this.framingRect = Rect(
             leftOffset + mViewFinderOffset,
