@@ -2,6 +2,7 @@ package me.dm7.barcodescanner.core
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.ImageFormat
 import android.graphics.Rect
 import android.graphics.RectF
 import android.util.AttributeSet
@@ -141,24 +142,16 @@ open class CameraView @JvmOverloads constructor(
     @SuppressLint("UnsafeOptInUsageError")
     private fun processImageProxy(imageProxy: ImageProxy, listener: CameraPreviewListener) {
         val rotationDegrees = imageProxy.imageInfo.rotationDegrees
-
-        val yPlane = imageProxy.planes[0]
-        val yBuffer = yPlane.buffer
         val width = imageProxy.width
         val height = imageProxy.height
-        val rowStride = yPlane.rowStride
 
-        val yBytes = ByteArray(width * height)
-        for (row in 0 until height) {
-            yBuffer.position(row * rowStride)
-            yBuffer.get(yBytes, row * width, width)
-        }
+        val nv21 = yuv420888ToNv21(imageProxy)
 
         val rotatedData = when (rotationDegrees) {
-            90 -> rotateY90(yBytes, width, height)
-            180 -> rotateY180(yBytes, width, height)
-            270 -> rotateY270(yBytes, width, height)
-            else -> yBytes
+            90 -> rotateNv2190(nv21, width, height)
+            180 -> rotateNv21180(nv21, width, height)
+            270 -> rotateNv21270(nv21, width, height)
+            else -> nv21
         }
 
         val finalWidth = if (rotationDegrees % 180 != 0) height else width
@@ -168,29 +161,99 @@ open class CameraView @JvmOverloads constructor(
         imageProxy.close()
     }
 
-    private fun rotateY90(data: ByteArray, width: Int, height: Int): ByteArray {
-        val rotated = ByteArray(data.size)
+    private fun yuv420888ToNv21(image: ImageProxy): ByteArray {
+        val pixelCount = image.width * image.height
+        val pixelSizeBits = ImageFormat.getBitsPerPixel(ImageFormat.YUV_420_888)
+        val outputBuffer = ByteArray(pixelCount * pixelSizeBits / 8)
+        val imagePlanes = image.planes
+
+        // Y plane
+        val yPlane = imagePlanes[0]
+        val yBuffer = yPlane.buffer
+        val yRowStride = yPlane.rowStride
+        val yPixelStride = yPlane.pixelStride
+        val width = image.width
+        val height = image.height
+
+        var offset = 0
         for (y in 0 until height) {
+            yBuffer.position(y * yRowStride)
             for (x in 0 until width) {
-                rotated[x * height + height - y - 1] = data[x + y * width]
+                outputBuffer[offset++] = yBuffer.get()
+                if (yPixelStride > 1) {
+                    yBuffer.position(yBuffer.position() + yPixelStride - 1)
+                }
+            }
+        }
+
+        // UV planes (interleaved for NV21: V, U, V, U...)
+        val vPlane = imagePlanes[2]
+        val uPlane = imagePlanes[1]
+        val vBuffer = vPlane.buffer
+        val uBuffer = uPlane.buffer
+        val vRowStride = vPlane.rowStride
+        val uRowStride = uPlane.rowStride
+        val vPixelStride = vPlane.pixelStride
+        val uPixelStride = uPlane.pixelStride
+
+        for (y in 0 until height / 2) {
+            for (x in 0 until width / 2) {
+                val vIndex = y * vRowStride + x * vPixelStride
+                val uIndex = y * uRowStride + x * uPixelStride
+                outputBuffer[offset++] = vBuffer.get(vIndex)
+                outputBuffer[offset++] = uBuffer.get(uIndex)
+            }
+        }
+
+        return outputBuffer
+    }
+
+    private fun rotateNv2190(data: ByteArray, width: Int, height: Int): ByteArray {
+        val ySize = width * height
+        val rotated = ByteArray(data.size)
+        var k = 0
+        for (i in 0 until width) {
+            for (j in height - 1 downTo 0) {
+                rotated[k++] = data[j * width + i]
+            }
+        }
+        k = ySize
+        for (i in 0 until width step 2) {
+            for (j in height / 2 - 1 downTo 0) {
+                rotated[k++] = data[ySize + j * width + i]
+                rotated[k++] = data[ySize + j * width + i + 1]
             }
         }
         return rotated
     }
 
-    private fun rotateY180(data: ByteArray, width: Int, height: Int): ByteArray {
+    private fun rotateNv21180(data: ByteArray, width: Int, height: Int): ByteArray {
+        val ySize = width * height
         val rotated = ByteArray(data.size)
-        for (i in 0 until data.size) {
-            rotated[data.size - i - 1] = data[i]
+        for (i in 0 until ySize) {
+            rotated[ySize - i - 1] = data[i]
+        }
+        for (i in 0 until ySize / 2 step 2) {
+            rotated[ySize + ySize / 2 - i - 2] = data[ySize + i]
+            rotated[ySize + ySize / 2 - i - 1] = data[ySize + i + 1]
         }
         return rotated
     }
 
-    private fun rotateY270(data: ByteArray, width: Int, height: Int): ByteArray {
+    private fun rotateNv21270(data: ByteArray, width: Int, height: Int): ByteArray {
+        val ySize = width * height
         val rotated = ByteArray(data.size)
-        for (y in 0 until height) {
-            for (x in 0 until width) {
-                rotated[(width - x - 1) * height + y] = data[x + y * width]
+        var k = 0
+        for (i in width - 1 downTo 0) {
+            for (j in 0 until height) {
+                rotated[k++] = data[j * width + i]
+            }
+        }
+        k = ySize
+        for (i in width - 1 downTo 0 step 2) {
+            for (j in 0 until height / 2) {
+                rotated[k++] = data[ySize + j * width + i - 1]
+                rotated[k++] = data[ySize + j * width + i]
             }
         }
         return rotated
@@ -206,10 +269,6 @@ open class CameraView @JvmOverloads constructor(
 
     fun setCustomEdgeOffset(offset: Int) {
         mViewFinderView?.setCustomEdgeOffset(offset)
-    }
-
-    fun setInvertColor(invert: Boolean) {
-        mViewFinderView?.setInvertColor(invert)
     }
 
     fun getPreviewView(): PreviewView = mPreviewView

@@ -35,7 +35,6 @@ open class ViewFinderView : View {
     private var mBordersAlpha = 0f
     private var mViewFinderOffset = 0
     private var mCustomEdgeOffset = -1
-    private var mInvertColor = false
 
     constructor(context: Context?) : super(context) {
         init()
@@ -113,12 +112,6 @@ open class ViewFinderView : View {
 
     fun setCustomEdgeOffset(offset: Int) {
         mCustomEdgeOffset = offset
-    }
-
-    fun setInvertColor(invert: Boolean) {
-        mInvertColor = invert
-        mFinderMaskPaint?.color = if (invert) android.graphics.Color.WHITE else mDefaultMaskColor
-        invalidate()
     }
 
     // TODO: Need a better way to configure this. Revisit when working on 2.0

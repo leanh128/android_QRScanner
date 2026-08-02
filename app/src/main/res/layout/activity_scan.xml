@@ -15,63 +15,45 @@
         app:layout_constraintTop_toTopOf="parent"
         app:squaredFinder="true" />
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <LinearLayout
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@android:color/black"
-        android:paddingTop="0dp"
+        android:gravity="center"
         app:layout_constraintTop_toTopOf="parent">
 
         <ImageView
-            android:id="@+id/btnSwitchCamera"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:clickable="true"
-            android:focusable="true"
-            android:padding="12dp"
-            android:src="@drawable/ic_camera_switch"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <ImageView
             android:id="@+id/btnFlash"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="0dp"
+            android:layout_height="45dp"
+            android:layout_weight="1"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:clickable="true"
             android:focusable="true"
-            android:padding="12dp"
-            android:src="@drawable/ic_flash_off"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/btnInvert"
-            app:layout_constraintStart_toEndOf="@+id/btnSwitchCamera"
-            app:layout_constraintTop_toTopOf="parent" />
+            android:padding="10dp"
+            android:src="@drawable/ic_flash_off" />
 
         <ImageView
-            android:id="@+id/btnInvert"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:id="@+id/btnSwitchCamera"
+            android:layout_width="0dp"
+            android:layout_height="45dp"
+            android:layout_weight="1"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:clickable="true"
             android:focusable="true"
-            android:padding="12dp"
-            android:src="@drawable/ic_invert_colors"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            android:padding="10dp"
+            android:src="@drawable/ic_camera_switch" />
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    </LinearLayout>
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/footer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@android:color/black"
-        android:paddingBottom="0dp"
         android:minHeight="120dp"
+        android:paddingBottom="0dp"
         app:layout_constraintBottom_toBottomOf="parent">
 
         <LinearLayout

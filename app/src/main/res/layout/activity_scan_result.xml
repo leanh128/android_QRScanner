@@ -18,73 +18,21 @@
         app:navigationIconTint="?attr/colorOnPrimary"
         app:titleTextColor="?attr/colorOnPrimary" />
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="16dp"
-        android:layout_marginTop="16dp"
-        android:background="@drawable/bg_corner_16"
-        android:elevation="8dp"
-        android:orientation="vertical"
-        android:paddingHorizontal="8dp"
-        android:paddingVertical="12dp">
-
-        <FrameLayout
-            android:id="@+id/layout_result"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="8dp"
-            android:background="@drawable/bg_result">
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:minLines="5"
-                android:padding="8dp"
-                android:textSize="18sp" />
-
-            <TextView
-                android:id="@+id/tv_result"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:gravity="center"
-                android:padding="8dp"
-                android:textColor="?attr/colorOnSurface"
-                android:textIsSelectable="true"
-                android:textSize="18sp"
-                tools:text="Holy shit" />
-        </FrameLayout>
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnAction"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="12dp"
-            android:backgroundTint="?attr/colorPrimary"
-            android:text="@android:string/search_go"
-            android:textColor="?attr/colorOnPrimary"
-            app:elevation="4dp"
-            app:cornerRadius="8dp"
-            app:rippleColor="?attr/colorPrimaryVariant" />
-
-    </LinearLayout>
-
-    <FrameLayout
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvResults"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1">
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingBottom="16dp"
+        tools:listitem="@layout/item_scan_result" />
 
-        <com.google.android.gms.ads.AdView xmlns:ads="http://schemas.android.com/apk/res-auto"
-            android:id="@+id/adView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginVertical="16dp"
-            ads:adSize="LARGE_BANNER"
-            ads:adUnitId="@string/RESULT_BANNER_ADS_UNIT" />
-
-    </FrameLayout>
+    <com.google.android.gms.ads.AdView
+        android:id="@+id/adView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        app:adSize="BANNER"
+        app:adUnitId="@string/RESULT_BANNER_ADS_UNIT" />
 
 </LinearLayout>

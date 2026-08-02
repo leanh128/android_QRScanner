@@ -3,10 +3,16 @@ package com.vn.qrscanner.features.scanner
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.ImageFormat
+import android.graphics.Rect
+import android.graphics.YuvImage
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
+import android.view.GestureDetector
+import android.view.MotionEvent
 import android.view.ScaleGestureDetector
 import android.view.View
 import android.view.WindowManager
@@ -32,6 +38,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import me.dm7.barcodescanner.core.CameraView
+import java.io.ByteArrayOutputStream
+import java.util.concurrent.TimeUnit
 
 class ScanActivity : AppCompatActivity(), CameraView.CameraPreviewListener {
     private val viewBinding: ActivityScanBinding by lazy {
@@ -43,7 +51,9 @@ class ScanActivity : AppCompatActivity(), CameraView.CameraPreviewListener {
     private var camera: Camera? = null
     private var cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
     private var isFlashOn = false
-    private var isInvertColor = false
+    private var lastPreviewFrame: ByteArray? = null
+    private var lastFrameWidth = 0
+    private var lastFrameHeight = 0
 
     private val galleryLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let { decodeFromUri(it) }
@@ -91,9 +101,9 @@ class ScanActivity : AppCompatActivity(), CameraView.CameraPreviewListener {
     private fun observeViewModel() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.scanResult.collect { result ->
-                    if (result != null) {
-                        handleScanResult(result)
+                viewModel.scanResults.collect { results ->
+                    if (results.isNotEmpty()) {
+                        handleScanResults(results)
                     }
                 }
             }
@@ -140,19 +150,75 @@ class ScanActivity : AppCompatActivity(), CameraView.CameraPreviewListener {
         } else if (hasFlash) {
             camera?.cameraControl?.enableTorch(isFlashOn)
         }
-        
-        // Invert color is a software feature, always enabled
-        viewBinding.scannerCamera.setInvertColor(isInvertColor)
     }
 
-    private fun handleScanResult(rawResult: Result) {
-        val country = (rawResult.resultMetadata?.get(ResultMetadataType.POSSIBLE_COUNTRY) as? String) ?: ""
+    private fun handleScanResults(results: List<Result>) {
+        val resultItems = ArrayList<ScanResultItem>()
+        
+        for (result in results) {
+            val previewBitmap = lastPreviewFrame?.let { data ->
+                cropResultPreview(data, lastFrameWidth, lastFrameHeight, result)
+            }
+            resultItems.add(ScanResultItem(result.text, previewBitmap))
+        }
+
         cameraProvider?.unbindAll()
         viewModel.resetResult()
-        ScanResultActivity.showResultActivity(this@ScanActivity, rawResult.text, country)
+        ScanResultActivity.showResultActivity(this@ScanActivity, resultItems)
+    }
+
+    private fun cropResultPreview(data: ByteArray, width: Int, height: Int, result: Result): Bitmap? {
+        try {
+            val points = result.resultPoints ?: return null
+            if (points.size < 2) return null
+
+            var minX = Float.MAX_VALUE
+            var minY = Float.MAX_VALUE
+            var maxX = Float.MIN_VALUE
+            var maxY = Float.MIN_VALUE
+
+            for (point in points) {
+                minX = minOf(minX, point.x)
+                minY = minOf(minY, point.y)
+                maxX = maxOf(maxX, point.x)
+                maxY = maxOf(maxY, point.y)
+            }
+
+            // Calculate width and height of the code area
+            val codeWidth = maxX - minX
+            val codeHeight = maxY - minY
+            
+            // Adjust to fit screen width (full width preview)
+            // We want the code to be centered and have some context around it
+            val paddingFactor = 1.5f
+            val cropWidth = (codeWidth * paddingFactor).toInt()
+            val cropHeight = (cropWidth * 9 / 16) // 16:9 aspect ratio or fixed height in UI
+            
+            val centerX = (minX + maxX) / 2
+            val centerY = (minY + maxY) / 2
+            
+            val rect = Rect(
+                maxOf(0, (centerX - cropWidth / 2).toInt()),
+                maxOf(0, (centerY - cropHeight / 2).toInt()),
+                minOf(width, (centerX + cropWidth / 2).toInt()),
+                minOf(height, (centerY + cropHeight / 2).toInt())
+            )
+
+            val yuvImage = YuvImage(data, ImageFormat.NV21, width, height, null)
+            val out = ByteArrayOutputStream()
+            yuvImage.compressToJpeg(rect, 90, out)
+            val imageBytes = out.toByteArray()
+            return BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to crop preview", e)
+            return null
+        }
     }
 
     override fun onPreviewFrame(data: ByteArray, width: Int, height: Int) {
+        lastPreviewFrame = data
+        lastFrameWidth = width
+        lastFrameHeight = height
         val framingRect = viewBinding.scannerCamera.getFramingRectInPreview(width, height)
         viewModel.decodeFrame(data, width, height, framingRect)
     }
@@ -196,21 +262,15 @@ class ScanActivity : AppCompatActivity(), CameraView.CameraPreviewListener {
             }
         }
 
-        viewBinding.btnInvert.setOnClickListener {
-            isInvertColor = !isInvertColor
-            viewBinding.btnInvert.alpha = if (isInvertColor) 1.0f else 0.5f
-            viewBinding.scannerCamera.setInvertColor(isInvertColor)
-        }
-
         viewBinding.btnGallery.setOnClickListener {
             galleryLauncher.launch("image/*")
         }
 
-        setupZoom()
+        setupCameraGestures()
     }
 
-    private fun setupZoom() {
-        val listener = object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
+    private fun setupCameraGestures() {
+        val scaleListener = object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
             override fun onScale(detector: ScaleGestureDetector): Boolean {
                 val currentZoomRatio = camera?.cameraInfo?.zoomState?.value?.zoomRatio ?: 1f
                 val delta = detector.scaleFactor
@@ -218,10 +278,27 @@ class ScanActivity : AppCompatActivity(), CameraView.CameraPreviewListener {
                 return true
             }
         }
-        val scaleGestureDetector = ScaleGestureDetector(this, listener)
+        val scaleGestureDetector = ScaleGestureDetector(this, scaleListener)
+
+        val tapListener = object : GestureDetector.SimpleOnGestureListener() {
+            override fun onSingleTapUp(e: MotionEvent): Boolean {
+                val factory = viewBinding.scannerCamera.getPreviewView().meteringPointFactory
+                val point = factory.createPoint(e.x, e.y)
+                val action = FocusMeteringAction.Builder(point, FocusMeteringAction.FLAG_AF)
+                    .setAutoCancelDuration(3, TimeUnit.SECONDS)
+                    .build()
+                camera?.cameraControl?.startFocusAndMetering(action)
+                return true
+            }
+        }
+        val gestureDetector = GestureDetector(this, tapListener)
+
         viewBinding.scannerCamera.getPreviewView().setOnTouchListener { v, event ->
             scaleGestureDetector.onTouchEvent(event)
-            v.performClick()
+            gestureDetector.onTouchEvent(event)
+            if (event.action == MotionEvent.ACTION_UP) {
+                v.performClick()
+            }
             true
         }
     }
@@ -263,7 +340,7 @@ class ScanActivity : AppCompatActivity(), CameraView.CameraPreviewListener {
                 }
 
                 withContext(Dispatchers.Main) {
-                    handleScanResult(result)
+                    handleScanResults(listOf(result))
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to decode image from gallery", e)
