@@ -4,7 +4,6 @@ import android.app.SearchManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
-import android.net.Uri
 import android.os.Bundle
 import android.os.Parcel
 import android.os.Parcelable
@@ -18,7 +17,7 @@ import com.vn.qrscanner.R
 import com.vn.qrscanner.databinding.ActivityScanResultBinding
 import com.vn.qrscanner.databinding.ItemScanResultBinding
 import com.vn.qrscanner.extensions.isLink
-import androidx.core.net.toUri
+import com.vn.qrscanner.extensions.toWebUri
 
 data class ScanResultItem(
     val result: String,
@@ -75,11 +74,14 @@ class ScanResultActivity : AppCompatActivity() {
     private fun handleResultAction(result: String) {
         result.takeIf { it.isNotEmpty() }
             ?.run {
+                val isUrl = isLink()
                 startActivity(Intent().apply {
-                    action = if (isLink()) Intent.ACTION_VIEW else Intent.ACTION_WEB_SEARCH
-                    if (isLink())
-                        data = result.toUri()
-                    else putExtra(SearchManager.QUERY, result)
+                    action = if (isUrl) Intent.ACTION_VIEW else Intent.ACTION_WEB_SEARCH
+                    if (isUrl) {
+                        data = toWebUri()
+                    } else {
+                        putExtra(SearchManager.QUERY, result)
+                    }
                 })
             }
     }
@@ -102,7 +104,8 @@ class ScanResultActivity : AppCompatActivity() {
         class ViewHolder(val binding: ItemScanResultBinding) : RecyclerView.ViewHolder(binding.root)
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-            val binding = ItemScanResultBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+            val binding =
+                ItemScanResultBinding.inflate(LayoutInflater.from(parent.context), parent, false)
             return ViewHolder(binding)
         }
 

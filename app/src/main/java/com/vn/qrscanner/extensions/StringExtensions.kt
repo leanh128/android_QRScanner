@@ -1,13 +1,17 @@
 package com.vn.qrscanner.extensions
 
+import android.net.Uri
 import android.text.TextUtils
-import java.util.Locale
-import java.util.regex.Pattern
+import android.util.Patterns
+import androidx.core.net.toUri
 
 
-fun String.isLink() : Boolean{
-    val linkRegex = "^(https?|ftp|file)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]"
-    if(!TextUtils.isEmpty(this))
-        return Pattern.compile(linkRegex).matcher(this.lowercase(Locale.ROOT)).matches()
-    return false
+fun String.isLink(): Boolean {
+    return !TextUtils.isEmpty(this) && Patterns.WEB_URL.matcher(this).matches()
+}
+
+fun String.toWebUri(): Uri {
+    val uri = toUri()
+    if (uri.scheme != null) return uri
+    return "https://$this".toUri()
 }

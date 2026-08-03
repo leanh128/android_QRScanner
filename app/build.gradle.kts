@@ -68,6 +68,7 @@ dependencies {
     implementation(libs.zxing.core)
 
     testImplementation(libs.junit)
+    testImplementation(libs.robolectric)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 }
