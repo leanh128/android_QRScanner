@@ -101,9 +101,9 @@ class ScanActivity : AppCompatActivity(), CameraView.CameraPreviewListener {
     private fun observeViewModel() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.scanResults.collect { results ->
-                    if (results.isNotEmpty()) {
-                        handleScanResults(results)
+                viewModel.scanResult.collect { result ->
+                    if (result != null) {
+                        handleScanResult(result)
                     }
                 }
             }
@@ -152,19 +152,15 @@ class ScanActivity : AppCompatActivity(), CameraView.CameraPreviewListener {
         }
     }
 
-    private fun handleScanResults(results: List<Result>) {
-        val resultItems = ArrayList<ScanResultItem>()
-        
-        for (result in results) {
-            val previewBitmap = lastPreviewFrame?.let { data ->
-                cropResultPreview(data, lastFrameWidth, lastFrameHeight, result)
-            }
-            resultItems.add(ScanResultItem(result.text, previewBitmap))
+    private fun handleScanResult(result: Result) {
+        val previewBitmap = lastPreviewFrame?.let { data ->
+            cropResultPreview(data, lastFrameWidth, lastFrameHeight, result)
         }
+        val resultItem = ScanResultItem(result.text, previewBitmap)
 
         cameraProvider?.unbindAll()
         viewModel.resetResult()
-        ScanResultActivity.showResultActivity(this@ScanActivity, resultItems)
+        ScanResultActivity.showResultActivity(this@ScanActivity, resultItem)
     }
 
     private fun cropResultPreview(data: ByteArray, width: Int, height: Int, result: Result): Bitmap? {
@@ -340,7 +336,7 @@ class ScanActivity : AppCompatActivity(), CameraView.CameraPreviewListener {
                 }
 
                 withContext(Dispatchers.Main) {
-                    handleScanResults(listOf(result))
+                    handleScanResult(result)
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to decode image from gallery", e)

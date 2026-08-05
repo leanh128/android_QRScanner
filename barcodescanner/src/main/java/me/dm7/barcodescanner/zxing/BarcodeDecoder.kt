@@ -5,14 +5,11 @@ import com.google.zxing.BarcodeFormat
 import com.google.zxing.BinaryBitmap
 import com.google.zxing.DecodeHintType
 import com.google.zxing.MultiFormatReader
-import com.google.zxing.NotFoundException
 import com.google.zxing.PlanarYUVLuminanceSource
 import com.google.zxing.ReaderException
-import com.google.zxing.multi.GenericMultipleBarcodeReader
 import com.google.zxing.Result
 import com.google.zxing.ResultPoint
 import com.google.zxing.common.HybridBinarizer
-import kotlinx.coroutines.ensureActive
 
 object BarcodeDecoder {
 
@@ -36,7 +33,7 @@ object BarcodeDecoder {
         BarcodeFormat.UPC_EAN_EXTENSION
     )
 
-    suspend fun decode(data: ByteArray, width: Int, height: Int, framingRect: Rect?): List<Result> {
+    suspend fun decode(data: ByteArray, width: Int, height: Int, framingRect: Rect?): Result? {
         val multiFormatReader = MultiFormatReader().apply {
             val hints = HashMap<DecodeHintType, Any>()
             val formats = ArrayList<BarcodeFormat>()
@@ -45,17 +42,13 @@ object BarcodeDecoder {
             setHints(hints)
         }
 
-        val multipleReader = GenericMultipleBarcodeReader(multiFormatReader)
-        val results = mutableListOf<Result>()
+        var rawResult: Result? = null
         val source = buildLuminanceSource(data, width, height, framingRect)
 
         if (source != null) {
             var bitmap = BinaryBitmap(HybridBinarizer(source))
             try {
-                val decodedResults = multipleReader.decodeMultiple(bitmap)
-                if (decodedResults != null) {
-                    results.addAll(decodedResults.map { translateResultPoints(it, framingRect) })
-                }
+                rawResult = multiFormatReader.decodeWithState(bitmap)
             } catch (re: ReaderException) {
                 // continue
             } catch (t: Throwable) {
@@ -64,14 +57,11 @@ object BarcodeDecoder {
                 multiFormatReader.reset()
             }
 
-            if (results.isEmpty()) {
+            if (rawResult == null) {
                 val invertedSource = source.invert()
                 bitmap = BinaryBitmap(HybridBinarizer(invertedSource))
                 try {
-                    val decodedResults = multipleReader.decodeMultiple(bitmap)
-                    if (decodedResults != null) {
-                        results.addAll(decodedResults.map { translateResultPoints(it, framingRect) })
-                    }
+                    rawResult = multiFormatReader.decodeWithState(bitmap)
                 } catch (e: Exception) {
                     // continue
                 } finally {
@@ -79,7 +69,7 @@ object BarcodeDecoder {
                 }
             }
         }
-        return results
+        return rawResult?.let { translateResultPoints(it, framingRect) }
     }
 
     private fun translateResultPoints(result: Result, framingRect: Rect?): Result {
@@ -88,7 +78,8 @@ object BarcodeDecoder {
         if (offsetLeft == 0f && offsetTop == 0f) return result
 
         val oldPoints = result.resultPoints ?: return result
-        val newPoints = oldPoints.map { ResultPoint(it.x + offsetLeft, it.y + offsetTop) }.toTypedArray()
+        val newPoints =
+            oldPoints.map { ResultPoint(it.x + offsetLeft, it.y + offsetTop) }.toTypedArray()
         val newResult = Result(result.text, result.rawBytes, newPoints, result.barcodeFormat)
         newResult.putAllMetadata(result.resultMetadata)
         return newResult
