@@ -16,11 +16,19 @@
         app:titleCentered="true"
         app:titleTextColor="?attr/colorOnPrimary" />
 
+    <com.google.android.gms.ads.AdView xmlns:ads="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/adView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        ads:adSize="FULL_BANNER"
+        ads:adUnitId="@string/RESULT_BANNER_ADS_UNIT" />
+
     <ScrollView
         android:id="@+id/contentContainer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="16dp"
         android:paddingBottom="12dp">
 
         <LinearLayout
@@ -48,16 +56,16 @@
                         android:id="@+id/et_content"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:alpha="0.7"
                         android:background="@drawable/bg_corner_8"
                         android:backgroundTint="@color/textBackground"
                         android:cursorVisible="true"
                         android:gravity="center"
                         android:hint="@string/hint_qr_code_generate_hint"
-                        android:minLines="2"
+                        android:minLines="3"
                         android:padding="8dp"
                         android:textColor="?attr/colorOnSurface"
-                        android:textColorHint="?attr/colorOnSurface"
-                        android:alpha="0.7" />
+                        android:textColorHint="?attr/colorOnSurface" />
 
                     <ImageButton
                         android:id="@+id/btn_clear"
@@ -81,9 +89,9 @@
                     android:text="@string/generate"
                     android:textAllCaps="true"
                     android:textColor="?attr/colorOnPrimary"
-                    app:elevation="4dp"
                     app:cornerRadius="8dp"
-                    app:rippleColor="?attr/colorPrimaryVariant"  />
+                    app:elevation="4dp"
+                    app:rippleColor="?attr/colorPrimaryVariant" />
 
                 <ImageView
                     android:id="@+id/imgQRCode"
@@ -108,15 +116,7 @@
                     tools:visibility="visible" />
             </LinearLayout>
 
-            <com.google.android.gms.ads.AdView xmlns:ads="http://schemas.android.com/apk/res-auto"
-                android:id="@+id/adView"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_marginTop="16dp"
-                android:layout_marginBottom="8dp"
-                ads:adSize="LARGE_BANNER"
-                ads:adUnitId="@string/RESULT_BANNER_ADS_UNIT" />
+
         </LinearLayout>
     </ScrollView>
 </LinearLayout>
