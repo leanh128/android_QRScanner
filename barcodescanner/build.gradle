@@ -12,6 +12,8 @@ android {
 dependencies {
     implementation libs.androidx.appcompat
     implementation libs.zxing.core
+    implementation libs.mlkit.barcode.scanning
+    implementation libs.kotlinx.coroutines.play.services
 
     // CameraX
     implementation libs.androidx.camera.core

@@ -53,6 +53,7 @@ dependencies {
     implementation(libs.lifecycle.viewmodel.ktx)
     implementation(libs.lifecycle.runtime.ktx)
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.kotlinx.coroutines.play.services)
 
     // CameraX
     implementation(libs.androidx.camera.core)
@@ -66,6 +67,7 @@ dependencies {
     //QR scanner
     implementation(project(":barcodescanner"))
     implementation(libs.zxing.core)
+    implementation(libs.mlkit.barcode.scanning)
 
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)

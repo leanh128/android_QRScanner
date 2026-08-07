@@ -3,11 +3,6 @@ package com.vn.qrscanner.features.scanner
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.graphics.ImageFormat
-import android.graphics.Rect
-import android.graphics.YuvImage
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -20,7 +15,10 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.camera.core.*
+import androidx.camera.core.AspectRatio
+import androidx.camera.core.Camera
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.FocusMeteringAction
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
@@ -28,17 +26,16 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import com.google.zxing.*
-import com.google.zxing.common.HybridBinarizer
 import com.vn.qrscanner.R
 import com.vn.qrscanner.databinding.ActivityScanBinding
 import com.vn.qrscanner.features.generator.QRGeneratorActivity
+import com.vn.qrscanner.utils.BitmapUtils
+import com.vn.qrscanner.utils.TempPreviewFileUtils
 import com.vn.qrscanner.utils.PermissionUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import me.dm7.barcodescanner.core.CameraView
-import java.io.ByteArrayOutputStream
 import java.util.concurrent.TimeUnit
 
 class ScanActivity : AppCompatActivity(), CameraView.CameraPreviewListener {
@@ -55,9 +52,14 @@ class ScanActivity : AppCompatActivity(), CameraView.CameraPreviewListener {
     private var lastFrameWidth = 0
     private var lastFrameHeight = 0
 
-    private val galleryLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        uri?.let { decodeFromUri(it) }
-    }
+    private val galleryLauncher =
+        registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+            if (uri != null) {
+                decodeFromUri(uri)
+            } else {
+                viewModel.resumeScanning()
+            }
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -81,7 +83,8 @@ class ScanActivity : AppCompatActivity(), CameraView.CameraPreviewListener {
         window.apply {
             clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
             addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
-            decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+            decorView.systemUiVisibility =
+                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
             statusBarColor = android.graphics.Color.TRANSPARENT
         }
 
@@ -101,9 +104,21 @@ class ScanActivity : AppCompatActivity(), CameraView.CameraPreviewListener {
     private fun observeViewModel() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.scanResult.collect { result ->
-                    if (result != null) {
-                        handleScanResult(result)
+                viewModel.scanResult.collect { state ->
+                    when (state) {
+                        is ScanResultState.Success -> {
+                            handleScanResult(state)
+                        }
+                        is ScanResultState.GalleryError -> {
+                            Toast.makeText(
+                                this@ScanActivity,
+                                "No QR code found in the image",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            viewModel.resumeScanning()
+                            viewModel.resetResult()
+                        }
+                        null -> {}
                     }
                 }
             }
@@ -115,7 +130,7 @@ class ScanActivity : AppCompatActivity(), CameraView.CameraPreviewListener {
         cameraProviderFuture.addListener({
             try {
                 cameraProvider = cameraProviderFuture.get()
-                
+
                 // Set up CameraView with appropriate ratio and offset
                 viewBinding.scannerCamera.setTargetAspectRatio(AspectRatio.RATIO_4_3)
                 val offset32dp = (32 * resources.displayMetrics.density).toInt()
@@ -129,9 +144,9 @@ class ScanActivity : AppCompatActivity(), CameraView.CameraPreviewListener {
                     cameraSelector,
                     useCaseGroup
                 )
-                
+
                 updateCameraFeaturesUI()
-                
+
             } catch (e: Exception) {
                 Log.e(TAG, "Camera initialization failed", e)
             }
@@ -142,7 +157,7 @@ class ScanActivity : AppCompatActivity(), CameraView.CameraPreviewListener {
         val hasFlash = camera?.cameraInfo?.hasFlashUnit() ?: false
         viewBinding.btnFlash.isEnabled = hasFlash
         viewBinding.btnFlash.alpha = if (hasFlash) 1.0f else 0.3f
-        
+
         // Reset flash state if not supported
         if (!hasFlash && isFlashOn) {
             isFlashOn = false
@@ -152,64 +167,25 @@ class ScanActivity : AppCompatActivity(), CameraView.CameraPreviewListener {
         }
     }
 
-    private fun handleScanResult(result: Result) {
-        val previewBitmap = lastPreviewFrame?.let { data ->
-            cropResultPreview(data, lastFrameWidth, lastFrameHeight, result)
+    private fun handleScanResult(state: ScanResultState.Success) {
+        val previewBitmap = if (state.bitmap != null) {
+            BitmapUtils.cropBitmap(state.bitmap, state.result)
+        } else {
+            lastPreviewFrame?.let { data ->
+                BitmapUtils.cropResultPreview(data, lastFrameWidth, lastFrameHeight, state.result)
+            }
         }
-        val resultItem = ScanResultItem(result.text, previewBitmap)
+        
+        val previewPath = previewBitmap?.let { 
+            TempPreviewFileUtils.saveBitmapToCache(this, it)
+        }
+        val resultItem = ScanResultItem(state.result.text, previewPath)
 
         cameraProvider?.unbindAll()
         viewModel.resetResult()
         ScanResultActivity.showResultActivity(this@ScanActivity, resultItem)
     }
 
-    private fun cropResultPreview(data: ByteArray, width: Int, height: Int, result: Result): Bitmap? {
-        try {
-            val points = result.resultPoints ?: return null
-            if (points.size < 2) return null
-
-            var minX = Float.MAX_VALUE
-            var minY = Float.MAX_VALUE
-            var maxX = Float.MIN_VALUE
-            var maxY = Float.MIN_VALUE
-
-            for (point in points) {
-                minX = minOf(minX, point.x)
-                minY = minOf(minY, point.y)
-                maxX = maxOf(maxX, point.x)
-                maxY = maxOf(maxY, point.y)
-            }
-
-            // Calculate width and height of the code area
-            val codeWidth = maxX - minX
-            val codeHeight = maxY - minY
-            
-            // Adjust to fit screen width (full width preview)
-            // We want the code to be centered and have some context around it
-            val paddingFactor = 1.5f
-            val cropWidth = (codeWidth * paddingFactor).toInt()
-            val cropHeight = (cropWidth * 9 / 16) // 16:9 aspect ratio or fixed height in UI
-            
-            val centerX = (minX + maxX) / 2
-            val centerY = (minY + maxY) / 2
-            
-            val rect = Rect(
-                maxOf(0, (centerX - cropWidth / 2).toInt()),
-                maxOf(0, (centerY - cropHeight / 2).toInt()),
-                minOf(width, (centerX + cropWidth / 2).toInt()),
-                minOf(height, (centerY + cropHeight / 2).toInt())
-            )
-
-            val yuvImage = YuvImage(data, ImageFormat.NV21, width, height, null)
-            val out = ByteArrayOutputStream()
-            yuvImage.compressToJpeg(rect, 90, out)
-            val imageBytes = out.toByteArray()
-            return BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to crop preview", e)
-            return null
-        }
-    }
 
     override fun onPreviewFrame(data: ByteArray, width: Int, height: Int) {
         lastPreviewFrame = data
@@ -259,6 +235,7 @@ class ScanActivity : AppCompatActivity(), CameraView.CameraPreviewListener {
         }
 
         viewBinding.btnGallery.setOnClickListener {
+            viewModel.pauseScanning()
             galleryLauncher.launch("image/*")
         }
 
@@ -302,46 +279,18 @@ class ScanActivity : AppCompatActivity(), CameraView.CameraPreviewListener {
     private fun decodeFromUri(uri: Uri) {
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                val inputStream = contentResolver.openInputStream(uri)
-                val bitmap = BitmapFactory.decodeStream(inputStream) ?: throw Exception("Failed to decode bitmap")
-                val width = bitmap.width
-                val height = bitmap.height
-                val pixels = IntArray(width * height)
-                bitmap.getPixels(pixels, 0, width, 0, 0, width, height)
-                
-                val source = RGBLuminanceSource(width, height, pixels)
-                val binaryBitmap = BinaryBitmap(HybridBinarizer(source))
-                val reader = MultiFormatReader().apply {
-                    val hints = HashMap<DecodeHintType, Any>()
-                    hints[DecodeHintType.TRY_HARDER] = true
-                    hints[DecodeHintType.POSSIBLE_FORMATS] = listOf(
-                        BarcodeFormat.QR_CODE,
-                        BarcodeFormat.DATA_MATRIX,
-                        BarcodeFormat.AZTEC,
-                        BarcodeFormat.PDF_417,
-                        BarcodeFormat.CODE_128,
-                        BarcodeFormat.CODE_39,
-                        BarcodeFormat.EAN_13,
-                        BarcodeFormat.EAN_8
-                    )
-                    setHints(hints)
-                }
-                
-                val result = try {
-                    reader.decode(binaryBitmap)
-                } catch (e: Exception) {
-                    val invertedSource = source.invert()
-                    val invertedBinaryBitmap = BinaryBitmap(HybridBinarizer(invertedSource))
-                    reader.decode(invertedBinaryBitmap)
-                }
-
-                withContext(Dispatchers.Main) {
-                    handleScanResult(result)
-                }
+                val bitmap = BitmapUtils.decodeBitmapFromUri(this@ScanActivity, uri)
+                    ?: throw Exception("Failed to decode bitmap")
+                viewModel.decodeBitmap(bitmap)
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to decode image from gallery", e)
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(this@ScanActivity, "No QR code found in the image", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this@ScanActivity,
+                        "Failed to load image",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    viewModel.resumeScanning()
                 }
             }
         }
@@ -351,6 +300,7 @@ class ScanActivity : AppCompatActivity(), CameraView.CameraPreviewListener {
         super.onStart()
         window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         if (PermissionUtil.verifyPermission(this, Manifest.permission.CAMERA)) {
+            viewModel.resumeScanning()
             startCamera()
         }
     }

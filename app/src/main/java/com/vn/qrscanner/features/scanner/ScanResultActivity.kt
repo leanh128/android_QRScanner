@@ -3,7 +3,7 @@ package com.vn.qrscanner.features.scanner
 import android.app.SearchManager
 import android.content.Context
 import android.content.Intent
-import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.os.Parcel
 import android.os.Parcelable
@@ -13,19 +13,20 @@ import com.vn.qrscanner.R
 import com.vn.qrscanner.databinding.ActivityScanResultBinding
 import com.vn.qrscanner.extensions.isLink
 import com.vn.qrscanner.extensions.toWebUri
+import com.vn.qrscanner.utils.TempPreviewFileUtils
 
 data class ScanResultItem(
     val result: String,
-    val preview: Bitmap? = null
+    val previewPath: String? = null
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
         parcel.readString() ?: "",
-        parcel.readParcelable(Bitmap::class.java.classLoader)
+        parcel.readString()
     )
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeString(result)
-        parcel.writeParcelable(preview, flags)
+        parcel.writeString(previewPath)
     }
 
     override fun describeContents(): Int = 0
@@ -51,6 +52,7 @@ class ScanResultActivity : AppCompatActivity() {
         setContentView(binding.root)
         binding.adView.loadAd(AdRequest.Builder().build())
         readIntentData()
+        TempPreviewFileUtils.clearCache(this, resultItem?.previewPath)
         initViews()
     }
 
@@ -58,8 +60,9 @@ class ScanResultActivity : AppCompatActivity() {
         binding.toolbar.setNavigationOnClickListener { onBackPressedDispatcher.onBackPressed() }
         resultItem?.let { item ->
             binding.tvResult.text = item.result
-            item.preview?.let {
-                binding.ivPreview.setImageBitmap(it)
+            item.previewPath?.let { path ->
+                val bitmap = BitmapFactory.decodeFile(path)
+                binding.ivPreview.setImageBitmap(bitmap)
             }
             binding.btnAction.text = getString(
                 if (item.result.isLink()) R.string.button_open_link else android.R.string.search_go

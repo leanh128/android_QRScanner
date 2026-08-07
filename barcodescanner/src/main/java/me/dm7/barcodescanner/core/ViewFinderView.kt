@@ -11,6 +11,7 @@ import android.graphics.Rect
 import android.util.AttributeSet
 import android.util.Log
 import android.view.View
+import androidx.core.content.ContextCompat.getColor
 import me.dm7.barcodescanner.R
 import me.dm7.barcodescanner.core.DisplayUtils.getScreenOrientation
 
@@ -18,9 +19,9 @@ open class ViewFinderView : View {
     var framingRect: Rect? = null
         private set
     private var scannerAlpha = 0
-    private val mDefaultLaserColor = resources.getColor(R.color.viewfinder_laser)
-    private val mDefaultMaskColor = resources.getColor(R.color.viewfinder_mask)
-    private val mDefaultBorderColor = resources.getColor(R.color.viewfinder_border)
+    private val mDefaultLaserColor = getColor(context, R.color.viewfinder_laser)
+    private val mDefaultMaskColor = getColor(context, R.color.viewfinder_mask)
+    private val mDefaultBorderColor = getColor(context, R.color.viewfinder_border)
     private val mDefaultBorderStrokeWidth =
         getResources().getInteger(R.integer.viewfinder_border_width)
     private val mDefaultBorderLineLength =
