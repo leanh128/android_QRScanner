@@ -44,7 +44,7 @@ object BarcodeDecoder {
 
     suspend fun decode(data: ByteArray, width: Int, height: Int, framingRect: Rect?): Result? {
         // Try ML Kit first
-        val mlKitResult = decodeWithMlKit(data, width, height)
+        val mlKitResult = decodeWithMlKit(data, width, height, framingRect)
         if (mlKitResult != null) return mlKitResult
 
         // Fallback to ZXing
@@ -81,16 +81,20 @@ object BarcodeDecoder {
         return bitmap.scale(newWidth, newHeight)
     }
 
-    private suspend fun decodeWithMlKit(data: ByteArray, width: Int, height: Int): Result? {
+    private suspend fun decodeWithMlKit(data: ByteArray, width: Int, height: Int, framingRect: Rect?): Result? {
         return try {
             val image = InputImage.fromByteArray(
                 data, width, height, 0, InputImage.IMAGE_FORMAT_NV21
             )
             val barcodes = mlKitScanner.process(image).await()
-            if (barcodes.isNotEmpty()) {
-                val barcode = barcodes[0]
-                Result(barcode.rawValue, null, null, null) // Simplified Result for ML Kit
-            } else null
+            val filteredBarcode = barcodes.find { barcode ->
+                val box = barcode.boundingBox ?: return@find true
+                framingRect == null || Rect.intersects(box, framingRect)
+            }
+
+            filteredBarcode?.let {
+                Result(it.rawValue, null, null, null)
+            }
         } catch (e: Exception) {
             null
         }
