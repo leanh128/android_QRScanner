@@ -2,16 +2,15 @@ package com.vn.qrscanner.features.scanner
 
 import android.Manifest
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
-import android.view.View
 import android.view.WindowManager
 import android.widget.Toast
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -28,12 +27,13 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.vn.qrscanner.R
 import com.vn.qrscanner.databinding.ActivityScanBinding
+import com.vn.qrscanner.extensions.decodeBitmap
+import com.vn.qrscanner.extensions.hasPermission
 import com.vn.qrscanner.features.generator.QRGeneratorActivity
-import com.vn.qrscanner.utils.BitmapUtils
+import com.vn.qrscanner.utils.ScannerBitmapUtils
 import com.vn.qrscanner.utils.TempPreviewFileUtils
-import com.vn.qrscanner.utils.PermissionUtil
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import me.dm7.barcodescanner.core.CameraView
 import java.util.concurrent.TimeUnit
@@ -61,33 +61,32 @@ class ScanActivity : AppCompatActivity(), CameraView.CameraPreviewListener {
             }
         }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(viewBinding.root)
-        setupFullScreen()
-
-        if (!PermissionUtil.verifyPermission(this, Manifest.permission.CAMERA)) {
-            PermissionUtil.requestPermissions(
-                this,
-                arrayOf(Manifest.permission.CAMERA),
-                REQUEST_CODE_CAMERA
-            )
+    private val cameraPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            viewModel.resumeScanning()
+            startCamera()
         } else {
-            initView()
+            Toast.makeText(this, "Camera permission is required", Toast.LENGTH_SHORT).show()
+            finish()
         }
-
-        observeViewModel()
     }
 
-    private fun setupFullScreen() {
-        window.apply {
-            clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
-            addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
-            decorView.systemUiVisibility =
-                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-            statusBarColor = android.graphics.Color.TRANSPARENT
-        }
+    override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
+        super.onCreate(savedInstanceState)
+        setContentView(viewBinding.root)
+        setupInsets()
+        initView()
+        observeViewModel()
 
+        if (!hasPermission(Manifest.permission.CAMERA)) {
+            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+        }
+    }
+
+    private fun setupInsets() {
         ViewCompat.setOnApplyWindowInsetsListener(viewBinding.toolbar) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(v.paddingLeft, systemBars.top, v.paddingRight, v.paddingBottom)
@@ -126,7 +125,7 @@ class ScanActivity : AppCompatActivity(), CameraView.CameraPreviewListener {
     }
 
     private fun startCamera() {
-        val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
+        val cameraProviderFuture = ProcessCameraProvider.getInstance(applicationContext)
         cameraProviderFuture.addListener({
             try {
                 cameraProvider = cameraProviderFuture.get()
@@ -169,10 +168,10 @@ class ScanActivity : AppCompatActivity(), CameraView.CameraPreviewListener {
 
     private fun handleScanResult(state: ScanResultState.Success) {
         val previewBitmap = if (state.bitmap != null) {
-            BitmapUtils.cropBitmap(state.bitmap, state.result)
+            ScannerBitmapUtils.cropBitmap(state.bitmap, state.result)
         } else {
             lastPreviewFrame?.let { data ->
-                BitmapUtils.cropResultPreview(data, lastFrameWidth, lastFrameHeight, state.result)
+                ScannerBitmapUtils.cropResultPreview(data, lastFrameWidth, lastFrameHeight, state.result)
             }
         }
         
@@ -193,23 +192,6 @@ class ScanActivity : AppCompatActivity(), CameraView.CameraPreviewListener {
         lastFrameHeight = height
         val framingRect = viewBinding.scannerCamera.getFramingRectInPreview(width, height)
         viewModel.decodeFrame(data, width, height, framingRect)
-    }
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == REQUEST_CODE_CAMERA) {
-            for (i in permissions.indices) {
-                if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {
-                    finish()
-                    return
-                }
-            }
-            initView()
-        }
     }
 
     private fun initView() {
@@ -279,7 +261,7 @@ class ScanActivity : AppCompatActivity(), CameraView.CameraPreviewListener {
     private fun decodeFromUri(uri: Uri) {
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                val bitmap = BitmapUtils.decodeBitmapFromUri(this@ScanActivity, uri)
+                val bitmap = uri.decodeBitmap(this@ScanActivity)
                     ?: throw Exception("Failed to decode bitmap")
                 viewModel.decodeBitmap(bitmap)
             } catch (e: Exception) {
@@ -299,7 +281,11 @@ class ScanActivity : AppCompatActivity(), CameraView.CameraPreviewListener {
     override fun onStart() {
         super.onStart()
         window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        if (PermissionUtil.verifyPermission(this, Manifest.permission.CAMERA)) {
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (hasPermission(Manifest.permission.CAMERA)) {
             viewModel.resumeScanning()
             startCamera()
         }
@@ -312,6 +298,5 @@ class ScanActivity : AppCompatActivity(), CameraView.CameraPreviewListener {
 
     companion object {
         private const val TAG = "ScanActivity"
-        const val REQUEST_CODE_CAMERA = 123
     }
 }

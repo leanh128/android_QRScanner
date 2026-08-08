@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.os.Parcel
 import android.os.Parcelable
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.IntentCompat
 import com.google.android.gms.ads.AdRequest
 import com.vn.qrscanner.R
 import com.vn.qrscanner.databinding.ActivityScanResultBinding
@@ -73,7 +74,7 @@ class ScanResultActivity : AppCompatActivity() {
     }
 
     private fun readIntentData() {
-        resultItem = intent.getParcelableExtra(ARG_RESULT)
+        resultItem = IntentCompat.getParcelableExtra(intent, ARG_RESULT, ScanResultItem::class.java)
     }
 
     private fun handleResultAction(result: String) {
