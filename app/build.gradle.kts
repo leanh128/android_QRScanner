@@ -11,8 +11,8 @@ android {
         applicationId = "com.vn.qrscanner"
         minSdk = 28
         targetSdk = 37
-        versionCode = 10
-        versionName = "3.0"
+        versionCode = 11
+        versionName = "3.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
