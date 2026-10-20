@@ -3,8 +3,17 @@
     <string name="app_name">QRスキャナー</string>
     <string name="title_result">結果</string>
     <string name="button_open_link">リンクを開く</string>
+    <string name="button_connect_wifi">Wi-Fiに接続</string>
     <string name="generate">生成</string>
     <string name="title_qr_generator">QRジェネレーター</string>
     <string name="toast_empty_content">生成するコンテンツがありません</string>
     <string name="hint_qr_code_generate_hint">ここにコンテンツを入力…</string>
+    <string name="toast_wifi_connected">%1$s に接続しました</string>
+    <string name="toast_wifi_connect_failed">%1$s に接続できません。パスワードと電波を確認してください。</string>
+    <string name="toast_wifi_invalid_qr">このWi-Fi QRコードは無効のようです</string>
+    <string name="toast_wifi_unsupported_security">このWi-Fiのセキュリティ方式には対応していません</string>
+    <string name="toast_wifi_saved">%1$s を保存しました。まもなく接続されます。</string>
+    <string name="button_connecting">接続中…</string>
+    <string name="toast_wifi_permission_denied">権限が拒否されました。Wi-Fi接続には権限が必要です。</string>
+    <string name="button_turn_on_wifi">接続するにはWi-Fiをオンにしてください</string>
 </resources>

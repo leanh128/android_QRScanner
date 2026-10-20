@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- View tag under which the per-activity ToastHost is stored on the content root. -->
+    <item name="toast_host" type="id" />
+</resources>

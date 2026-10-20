@@ -3,8 +3,17 @@
     <string name="app_name">QR-Scanner</string>
     <string name="title_result">Ergebnis</string>
     <string name="button_open_link">Link öffnen</string>
+    <string name="button_connect_wifi">WLAN verbinden</string>
     <string name="generate">Generieren</string>
     <string name="title_qr_generator">QR-Generator</string>
     <string name="toast_empty_content">Nichts zu generieren</string>
     <string name="hint_qr_code_generate_hint">Ihre Inhalte hier…</string>
+    <string name="toast_wifi_connected">Mit %1$s verbunden</string>
+    <string name="toast_wifi_connect_failed">Verbindung mit %1$s fehlgeschlagen. Passwort und Signal prüfen.</string>
+    <string name="toast_wifi_invalid_qr">Dieser WLAN-QR-Code scheint ungültig zu sein</string>
+    <string name="toast_wifi_unsupported_security">Diese WLAN-Sicherheit wird nicht unterstützt</string>
+    <string name="toast_wifi_saved">%1$s gespeichert. Das Handy verbindet sich gleich.</string>
+    <string name="button_connecting">Verbinden…</string>
+    <string name="toast_wifi_permission_denied">Berechtigung verweigert. Berechtigung erforderlich, um mit WLAN zu verbinden.</string>
+    <string name="button_turn_on_wifi">WLAN zum Verbinden einschalten</string>
 </resources>

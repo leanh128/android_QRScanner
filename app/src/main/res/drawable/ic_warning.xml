@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+  <!-- Orange Filled Rounded Triangle -->
+  <path
+      android:fillColor="#E65100"
+      android:pathData="M12,2.5c0.6,0 1.15,0.33 1.45,0.86l8.05,14.5c0.6,1.08 -0.18,2.39 -1.45,2.39H3.95c-1.27,0 -2.05,-1.31 -1.45,-2.39l8.05,-14.5C10.85,2.83 11.4,2.5 12,2.5z" />
+
+  <!-- White Outer Border -->
+  <path
+      android:strokeColor="#FCFCFC"
+      android:strokeWidth="1.5"
+      android:strokeLineCap="round"
+      android:strokeLineJoin="round"
+      android:pathData="M12,2.5c0.6,0 1.15,0.33 1.45,0.86l8.05,14.5c0.6,1.08 -0.18,2.39 -1.45,2.39H3.95c-1.27,0 -2.05,-1.31 -1.45,-2.39l8.05,-14.5C10.85,2.83 11.4,2.5 12,2.5z" />
+
+  <!-- White Exclamation Mark Bar -->
+  <path
+      android:fillColor="#FCFCFC"
+      android:pathData="M12,8c-0.69,0 -1.25,0.56 -1.25,1.25v3.5c0,0.69 0.56,1.25 1.25,1.25s1.25,-0.56 1.25,-1.25v-3.5C13.25,8.56 12.69,8 12,8z" />
+
+  <!-- White Exclamation Mark Dot -->
+  <path
+      android:fillColor="#FCFCFC"
+      android:pathData="M12,17c0.69,0 1.25,-0.56 1.25,-1.25S12.69,14.5 12,14.5s-1.25,0.56 -1.25,1.25S11.31,17 12,17z" />
+</vector>

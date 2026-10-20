@@ -3,8 +3,17 @@
     <string name="app_name">Scanner QR</string>
     <string name="title_result">Résultat</string>
     <string name="button_open_link">Ouvrir le lien</string>
+    <string name="button_connect_wifi">Connecter au Wi-Fi</string>
     <string name="generate">Générer</string>
     <string name="title_qr_generator">Générateur de QR</string>
     <string name="toast_empty_content">Rien à générer</string>
     <string name="hint_qr_code_generate_hint">Votre contenu ici…</string>
+    <string name="toast_wifi_connected">Connecté à %1$s</string>
+    <string name="toast_wifi_connect_failed">Impossible de se connecter à %1$s. Vérifiez le mot de passe et le signal.</string>
+    <string name="toast_wifi_invalid_qr">Ce QR code Wi-Fi semble invalide</string>
+    <string name="toast_wifi_unsupported_security">Ce type de sécurité Wi-Fi n\'est pas pris en charge</string>
+    <string name="toast_wifi_saved">%1$s enregistré. Le téléphone va se connecter.</string>
+    <string name="button_connecting">Connexion…</string>
+    <string name="toast_wifi_permission_denied">Permission refusée. Permission requise pour se connecter au Wi-Fi.</string>
+    <string name="button_turn_on_wifi">Activez le Wi-Fi pour vous connecter</string>
 </resources>

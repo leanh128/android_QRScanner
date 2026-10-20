@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+  <!-- Blue Filled Circle -->
+  <path
+      android:fillColor="#1565C0"
+      android:pathData="M12,2C6.48,2 2,6.48 2,12s4.48,10 10,10 10,-4.48 10,-10S17.52,2 12,2z" />
+
+  <!-- White Outer Border -->
+  <path
+      android:strokeColor="#FCFCFC"
+      android:strokeWidth="1.5"
+      android:pathData="M12,2C6.48,2 2,6.48 2,12s4.48,10 10,10 10,-4.48 10,-10S17.52,2 12,2z" />
+
+  <!-- White Inner "i" Symbol -->
+  <path
+      android:fillColor="#FCFCFC"
+      android:pathData="M12,8c0.69,0 1.25,-0.56 1.25,-1.25S12.69,5.5 12,5.5s-1.25,0.56 -1.25,1.25S11.31,8 12,8zM12,10c-0.69,0 -1.25,0.56 -1.25,1.25v5.5c0,0.69 0.56,1.25 1.25,1.25s1.25,-0.56 1.25,-1.25v-5.5C13.25,10.56 12.69,10 12,10z" />
+</vector>
