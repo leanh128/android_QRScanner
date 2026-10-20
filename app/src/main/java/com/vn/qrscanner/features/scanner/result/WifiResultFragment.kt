@@ -11,6 +11,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
@@ -21,6 +22,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.google.android.material.progressindicator.CircularProgressIndicatorSpec
 import com.google.android.material.progressindicator.IndeterminateDrawable
 import com.vn.qrscanner.R
+import com.vn.qrscanner.features.scanner.ScanResultItem
 import com.vn.qrscanner.databinding.FragmentWifiResultBinding
 import com.vn.qrscanner.utils.QrCodeType
 import com.vn.qrscanner.utils.WifiConnectResult
@@ -37,7 +39,7 @@ class WifiResultFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val resultViewModel: ScanResultViewModel by lazy {
-        ViewModelProvider(requireActivity())[ScanResultViewModel::class.java]
+        ViewModelProvider(this)[ScanResultViewModel::class.java]
     }
 
     private val viewModel: WifiResultViewModel by lazy {
@@ -161,6 +163,12 @@ class WifiResultFragment : Fragment() {
             WifiConnectResult.UnsupportedSecurity ->
                 activity.showErrorToast(getString(R.string.toast_wifi_unsupported_security))
             WifiConnectResult.Cancelled -> Unit
+        }
+    }
+
+    companion object {
+        fun newInstance(item: ScanResultItem) = WifiResultFragment().apply {
+            arguments = bundleOf(ScanResultViewModel.ARG_RESULT to item)
         }
     }
 }

@@ -47,6 +47,12 @@ object ScannerBitmapUtils {
         }
     }
 
+    /** Pixel area of the preview [cropResultPreview] would produce, without building it. */
+    fun previewArea(width: Int, height: Int, result: Result): Int {
+        val rect = calculateCropRect(width, height, result)
+        return rect.width() * rect.height()
+    }
+
     fun cropResultPreview(
         data: ByteArray,
         width: Int,

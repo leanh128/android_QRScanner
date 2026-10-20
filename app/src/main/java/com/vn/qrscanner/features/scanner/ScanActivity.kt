@@ -30,7 +30,6 @@ import com.vn.qrscanner.databinding.ActivityScanBinding
 import com.vn.qrscanner.extensions.decodeBitmap
 import com.vn.qrscanner.extensions.hasPermission
 import com.vn.qrscanner.features.generator.QRGeneratorActivity
-import com.vn.qrscanner.utils.ScannerBitmapUtils
 import com.vn.qrscanner.utils.TempPreviewFileUtils
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
@@ -48,9 +47,6 @@ class ScanActivity : AppCompatActivity(), CameraView.CameraPreviewListener {
     private var camera: Camera? = null
     private var cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
     private var isFlashOn = false
-    private var lastPreviewFrame: ByteArray? = null
-    private var lastFrameWidth = 0
-    private var lastFrameHeight = 0
 
     private val galleryLauncher =
         registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
@@ -167,29 +163,20 @@ class ScanActivity : AppCompatActivity(), CameraView.CameraPreviewListener {
     }
 
     private fun handleScanResult(state: ScanResultState.Success) {
-        val previewBitmap = if (state.bitmap != null) {
-            ScannerBitmapUtils.cropBitmap(state.bitmap, state.result)
-        } else {
-            lastPreviewFrame?.let { data ->
-                ScannerBitmapUtils.cropResultPreview(data, lastFrameWidth, lastFrameHeight, state.result)
-            }
+        // One fresh cache for the whole batch; each preview is saved without touching the others.
+        TempPreviewFileUtils.clearCache(this)
+        val items = state.items.map { scanned ->
+            val previewPath = scanned.preview?.let { TempPreviewFileUtils.saveBitmapToCache(this, it) }
+            ScanResultItem(scanned.text.orEmpty(), previewPath)
         }
-        
-        val previewPath = previewBitmap?.let { 
-            TempPreviewFileUtils.saveBitmapToCache(this, it)
-        }
-        val resultItem = ScanResultItem(state.result.text, previewPath)
 
         cameraProvider?.unbindAll()
         viewModel.resetResult()
-        ScanResultActivity.showResultActivity(this@ScanActivity, resultItem)
+        ScanResultActivity.showResultActivity(this@ScanActivity, items)
     }
 
 
     override fun onPreviewFrame(data: ByteArray, width: Int, height: Int) {
-        lastPreviewFrame = data
-        lastFrameWidth = width
-        lastFrameHeight = height
         val framingRect = viewBinding.scannerCamera.getFramingRectInPreview(width, height)
         viewModel.decodeFrame(data, width, height, framingRect)
     }

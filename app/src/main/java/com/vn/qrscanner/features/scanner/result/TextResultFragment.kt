@@ -4,12 +4,14 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.launch
+import com.vn.qrscanner.features.scanner.ScanResultItem
 import com.vn.qrscanner.databinding.FragmentTextResultBinding
 import com.vn.qrscanner.utils.QrCodeUtils
 
@@ -20,7 +22,7 @@ class TextResultFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val viewModel: ScanResultViewModel by lazy {
-        ViewModelProvider(requireActivity())[ScanResultViewModel::class.java]
+        ViewModelProvider(this)[ScanResultViewModel::class.java]
     }
 
     override fun onCreateView(
@@ -62,5 +64,11 @@ class TextResultFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    companion object {
+        fun newInstance(item: ScanResultItem) = TextResultFragment().apply {
+            arguments = bundleOf(ScanResultViewModel.ARG_RESULT to item)
+        }
     }
 }
