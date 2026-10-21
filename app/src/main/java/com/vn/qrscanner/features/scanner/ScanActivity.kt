@@ -34,6 +34,7 @@ import com.vn.qrscanner.utils.TempPreviewFileUtils
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import me.dm7.barcodescanner.core.CameraFrame
 import me.dm7.barcodescanner.core.CameraView
 import java.util.concurrent.TimeUnit
 
@@ -176,9 +177,9 @@ class ScanActivity : AppCompatActivity(), CameraView.CameraPreviewListener {
     }
 
 
-    override fun onPreviewFrame(data: ByteArray, width: Int, height: Int) {
-        val framingRect = viewBinding.scannerCamera.getFramingRectInPreview(width, height)
-        viewModel.decodeFrame(data, width, height, framingRect)
+    override fun onPreviewFrame(frame: CameraFrame) {
+        val framingRect = viewBinding.scannerCamera.getFramingRectInPreview(frame.width, frame.height)
+        viewModel.onCameraFrame(frame, framingRect)
     }
 
     private fun initView() {
@@ -192,6 +193,8 @@ class ScanActivity : AppCompatActivity(), CameraView.CameraPreviewListener {
             } else {
                 CameraSelector.DEFAULT_BACK_CAMERA
             }
+            // Frames from the other camera have nothing to do with the current attempt.
+            viewModel.resumeScanning()
             startCamera()
         }
 
@@ -276,6 +279,12 @@ class ScanActivity : AppCompatActivity(), CameraView.CameraPreviewListener {
             viewModel.resumeScanning()
             startCamera()
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        // Leaving the screen mid-scan drops the attempt; onResume starts a fresh one.
+        viewModel.pauseScanning()
     }
 
     override fun onStop() {
