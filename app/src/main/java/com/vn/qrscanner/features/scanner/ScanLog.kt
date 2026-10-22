@@ -7,7 +7,7 @@ import java.util.Locale
 /**
  * Debug logs for tuning camera scanning, on in debug builds only.
  * - `adb logcat -s QrScan` shows phase changes, decodes and results.
- * - `adb logcat -s QrScanFrame:V` adds one line per camera frame (stability measurements).
+ * - `adb logcat -s QrScanFrame:V` adds one line per camera frame (motion measurements).
  */
 internal object ScanLog {
     const val TAG = "QrScan"

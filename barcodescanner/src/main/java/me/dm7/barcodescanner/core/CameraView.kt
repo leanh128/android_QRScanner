@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Rect
 import android.graphics.RectF
 import android.util.AttributeSet
+import android.util.Size
 import android.widget.FrameLayout
 import androidx.annotation.ColorInt
 import androidx.camera.core.AspectRatio
@@ -12,6 +13,7 @@ import androidx.camera.core.Preview
 import androidx.camera.core.UseCaseGroup
 import androidx.camera.core.resolutionselector.AspectRatioStrategy
 import androidx.camera.core.resolutionselector.ResolutionSelector
+import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import me.dm7.barcodescanner.R
@@ -53,6 +55,8 @@ open class CameraView @JvmOverloads constructor(
     private var mAnalysisExecutor: ExecutorService? = null
 
     init {
+        // getFramingRectInPreview relies on this.
+        mPreviewView.scaleType = PreviewView.ScaleType.FILL_CENTER
         val a = context.theme.obtainStyledAttributes(
             attributeSet,
             R.styleable.BarcodeScannerView,
@@ -120,9 +124,26 @@ open class CameraView @JvmOverloads constructor(
                 it.surfaceProvider = mPreviewView.surfaceProvider
             }
 
+        // Without a resolution CameraX analyses at 640x480, too coarse to read small or several
+        // codes at once.
+        val analysisResolutionSelector = ResolutionSelector.Builder()
+            .setAspectRatioStrategy(
+                AspectRatioStrategy(
+                    mTargetAspectRatio,
+                    AspectRatioStrategy.FALLBACK_RULE_AUTO
+                )
+            )
+            .setResolutionStrategy(
+                ResolutionStrategy(
+                    Size(ANALYSIS_WIDTH, ANALYSIS_HEIGHT),
+                    ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER
+                )
+            )
+            .build()
+
         val imageAnalysis = ImageAnalysis.Builder()
             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-            .setResolutionSelector(resolutionSelector)
+            .setResolutionSelector(analysisResolutionSelector)
             .build()
             .also {
                 // Frames are handled off the main thread so reading them never blocks the UI.
@@ -174,7 +195,7 @@ open class CameraView @JvmOverloads constructor(
         val viewWidth = width
         val viewHeight = height
 
-        if (viewWidth <= 0 || viewHeight <= 0) return null
+        if (viewWidth <= 0 || viewHeight <= 0 || previewWidth <= 0 || previewHeight <= 0) return null
 
         val rect = RectF(
             framingRect.left.toFloat(),
@@ -183,19 +204,27 @@ open class CameraView @JvmOverloads constructor(
             framingRect.bottom.toFloat()
         )
 
-        val scaleX = previewWidth.toFloat() / viewWidth.toFloat()
-        val scaleY = previewHeight.toFloat() / viewHeight.toFloat()
+        // The preview fills the view and is centred, so one side of it is cropped: the frame is
+        // scaled by one factor (not by view size / frame size on each axis) and the cropped part
+        // is not on screen.
+        val scale = maxOf(viewWidth / previewWidth.toFloat(), viewHeight / previewHeight.toFloat())
+        val offsetX = (previewWidth * scale - viewWidth) / 2f
+        val offsetY = (previewHeight * scale - viewHeight) / 2f
 
         val mappedRect = Rect()
-        mappedRect.left = (rect.left * scaleX).toInt()
-        mappedRect.top = (rect.top * scaleY).toInt()
-        mappedRect.right = (rect.right * scaleX).toInt()
-        mappedRect.bottom = (rect.bottom * scaleY).toInt()
+        mappedRect.left = ((rect.left + offsetX) / scale).toInt()
+        mappedRect.top = ((rect.top + offsetY) / scale).toInt()
+        mappedRect.right = ((rect.right + offsetX) / scale).toInt()
+        mappedRect.bottom = ((rect.bottom + offsetY) / scale).toInt()
 
         return mappedRect
     }
 
     companion object {
         private const val TAG = "CameraView"
+
+        /** Size of the frames handed to the listener (landscape sensor orientation, 4:3). */
+        private const val ANALYSIS_WIDTH = 1280
+        private const val ANALYSIS_HEIGHT = 960
     }
 }

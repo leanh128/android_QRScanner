@@ -1,7 +1,12 @@
 package com.vn.qrscanner.features.scanner
 
 import android.Manifest
+import android.content.Context
 import android.content.Intent
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -48,6 +53,20 @@ class ScanActivity : AppCompatActivity(), CameraView.CameraPreviewListener {
     private var camera: Camera? = null
     private var cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
     private var isFlashOn = false
+
+    private val sensorManager by lazy { getSystemService(Context.SENSOR_SERVICE) as SensorManager }
+    private val accelerometer by lazy { sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) }
+
+    /** Feeds the accelerometer to the view model, which waits for a still phone before decoding. */
+    private val accelerometerListener = object : SensorEventListener {
+        override fun onSensorChanged(event: SensorEvent) {
+            val (x, y, z) = event.values
+            // Sensor timestamps are nanoseconds on the elapsedRealtime clock.
+            viewModel.onAccelerometerSample(x, y, z, event.timestamp / 1_000_000L)
+        }
+
+        override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) = Unit
+    }
 
     private val galleryLauncher =
         registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
@@ -275,6 +294,9 @@ class ScanActivity : AppCompatActivity(), CameraView.CameraPreviewListener {
 
     override fun onResume() {
         super.onResume()
+        val hasSensor = accelerometer != null &&
+            sensorManager.registerListener(accelerometerListener, accelerometer, SensorManager.SENSOR_DELAY_GAME)
+        viewModel.setMotionSensorAvailable(hasSensor)
         if (hasPermission(Manifest.permission.CAMERA)) {
             viewModel.resumeScanning()
             startCamera()
@@ -283,6 +305,7 @@ class ScanActivity : AppCompatActivity(), CameraView.CameraPreviewListener {
 
     override fun onPause() {
         super.onPause()
+        sensorManager.unregisterListener(accelerometerListener)
         // Leaving the screen mid-scan drops the attempt; onResume starts a fresh one.
         viewModel.pauseScanning()
     }

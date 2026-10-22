@@ -10,6 +10,7 @@ android {
 }
 
 dependencies {
+    testImplementation libs.junit
     implementation libs.androidx.appcompat
     implementation libs.zxing.core
     implementation libs.mlkit.barcode.scanning

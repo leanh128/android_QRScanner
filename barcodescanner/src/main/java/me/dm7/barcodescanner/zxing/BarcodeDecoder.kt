@@ -44,6 +44,10 @@ object BarcodeDecoder {
 
     private const val MAX_DIMENSION = 1280
 
+    /** Set to get a line about what ML Kit saw in each camera frame, before scan-area filtering. */
+    @Volatile
+    var debugLog: ((String) -> Unit)? = null
+
     suspend fun decode(data: ByteArray, width: Int, height: Int, framingRect: Rect?): Result? {
         // Try ML Kit first
         val mlKitResult = decodeWithMlKit(data, width, height, framingRect)
@@ -55,14 +59,11 @@ object BarcodeDecoder {
 
     /**
      * Like [decode], but returns every code found inside [framingRect] of a camera frame (ML Kit
-     * sees several at once).
-     * The ZXing fallback can only find one.
+     * sees several at once). Only ML Kit is used: ZXing on a live frame mostly produces phantom
+     * short barcodes out of background texture, and is slow.
      */
-    suspend fun decodeAll(data: ByteArray, width: Int, height: Int, framingRect: Rect?): List<Result> {
-        val mlKitResults = decodeAllWithMlKit(data, width, height, framingRect)
-        if (mlKitResults.isNotEmpty()) return mlKitResults
-        return decodeAllWithZxing(data, width, height, framingRect)
-    }
+    suspend fun decodeAll(data: ByteArray, width: Int, height: Int, framingRect: Rect?): List<Result> =
+        decodeAllWithMlKit(data, width, height, framingRect)
 
     /**
      * Every code found anywhere in a picture (no scan-area filter). Result points are in [bitmap]'s own coordinates, so callers
@@ -131,13 +132,14 @@ object BarcodeDecoder {
     }
 
     /**
-     * Camera frames only count codes lying entirely inside the scan area (a code cut off by its
-     * edge may be incomplete). Pictures from the gallery are not filtered: the whole image counts.
+     * Camera frames only count codes whose centre lies inside the scan area. A code that sticks
+     * out a little is still complete (it decoded), so requiring all of it inside would drop codes
+     * the user is clearly aiming at. Pictures from the gallery are not filtered.
      */
     private fun Barcode.isInScanArea(scanArea: Rect?): Boolean {
         if (scanArea == null) return true
         val box = boundingBox ?: return false
-        return scanArea.contains(box)
+        return scanArea.contains(box.centerX(), box.centerY())
     }
 
     private fun Barcode.zxingFormat(): BarcodeFormat? = when (format) {
@@ -167,7 +169,14 @@ object BarcodeDecoder {
             val image = InputImage.fromByteArray(
                 data, width, height, 0, InputImage.IMAGE_FORMAT_NV21
             )
-            mlKitScanner.process(image).await()
+            val barcodes = mlKitScanner.process(image).await()
+            debugLog?.let { log ->
+                log(
+                    "ML Kit saw ${barcodes.size} code(s) in ${width}x$height, scan area $framingRect: " +
+                        barcodes.joinToString { "${it.zxingFormat()}@${it.boundingBox}" }
+                )
+            }
+            barcodes
                 .filter { it.isInScanArea(framingRect) }
                 .map { barcode ->
                     // Corner points let callers crop a preview around this specific code.
@@ -234,19 +243,6 @@ object BarcodeDecoder {
         } catch (e: Exception) {
             null
         }
-    }
-
-    private fun decodeAllWithZxing(
-        data: ByteArray,
-        width: Int,
-        height: Int,
-        framingRect: Rect?
-    ): List<Result> {
-        val source = buildLuminanceSource(data, width, height, framingRect) ?: return emptyList()
-        val results = decodeMultipleWithZxing(source).ifEmpty {
-            decodeMultipleWithZxing(source.invert())
-        }
-        return results.map { translateResultPoints(it, framingRect) }
     }
 
     private fun decodeWithZxing(

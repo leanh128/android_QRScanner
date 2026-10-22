@@ -1,12 +1,13 @@
 package me.dm7.barcodescanner.core
 
 import android.graphics.ImageFormat
+import android.graphics.Rect
 import androidx.camera.core.ImageProxy
 
 /**
  * One camera frame, handed to [CameraView.CameraPreviewListener.onPreviewFrame]. It wraps the
- * camera buffer, so it is only valid during that call. Reading [lumaGrid] is cheap enough for
- * every frame; [toNv21] is the expensive full copy, so call it only for frames you will decode.
+ * camera buffer, so it is only valid during that call. [sharpness] reads a few thousand pixels;
+ * [toNv21] is a full copy, so call it only for frames you will decode.
  */
 class CameraFrame internal constructor(private val image: ImageProxy) {
 
@@ -19,49 +20,88 @@ class CameraFrame internal constructor(private val image: ImageProxy) {
     val height: Int = if (rotationDegrees % 180 != 0) image.width else image.height
 
     /**
-     * Average brightness (0-255) of each cell of a [cols] x [rows] grid laid over the frame, read
-     * from a few pixels per cell. The grid follows the sensor orientation (not rotated upright),
-     * which is fine for comparing frames from the same camera.
+     * How sharp the picture is inside [area] (upright frame coordinates, null for the whole
+     * frame): the variance of the Laplacian of the brightness, so higher is sharper and a blurry
+     * or empty area scores near 0. About [SHARPNESS_SAMPLES] x [SHARPNESS_SAMPLES] pixels are
+     * read whatever the frame size, so the score does not depend on the resolution.
      */
-    fun lumaGrid(cols: Int = GRID_COLS, rows: Int = GRID_ROWS): FloatArray {
+    fun sharpness(area: Rect?): Float {
         val plane = image.planes[0]
         val buffer = plane.buffer
         val rowStride = plane.rowStride
         val pixelStride = plane.pixelStride
-        val cellWidth = maxOf(1, image.width / cols)
-        val cellHeight = maxOf(1, image.height / rows)
-        val step = maxOf(1, minOf(cellWidth, cellHeight) / SAMPLES_PER_CELL_SIDE)
+        val roi = toSensorRect(area)
+        val step = maxOf(1, minOf(roi.width(), roi.height()) / SHARPNESS_SAMPLES)
 
-        val grid = FloatArray(cols * rows)
-        for (row in 0 until rows) {
-            val top = row * cellHeight
-            for (col in 0 until cols) {
-                val left = col * cellWidth
-                var sum = 0
-                var count = 0
-                var y = top
-                while (y < top + cellHeight && y < image.height) {
-                    var x = left
-                    while (x < left + cellWidth && x < image.width) {
-                        sum += buffer.get(y * rowStride + x * pixelStride).toInt() and 0xFF
-                        count++
-                        x += step
-                    }
-                    y += step
+        // Three rows are copied at a time: reading the direct buffer byte by byte is far slower.
+        val rowWidth = roi.width()
+        val above = ByteArray(rowWidth)
+        val middle = ByteArray(rowWidth)
+        val below = ByteArray(rowWidth)
+        fun readRow(into: ByteArray, y: Int) {
+            if (pixelStride == 1) {
+                buffer.position(y * rowStride + roi.left)
+                buffer.get(into, 0, rowWidth)
+            } else {
+                for (i in 0 until rowWidth) {
+                    into[i] = buffer.get(y * rowStride + (roi.left + i) * pixelStride)
                 }
-                grid[row * cols + col] = if (count == 0) 0f else sum.toFloat() / count
             }
         }
-        return grid
+        fun at(row: ByteArray, x: Int) = row[x].toInt() and 0xFF
+
+        var sum = 0.0
+        var sumSquares = 0.0
+        var count = 0
+        var y = roi.top + step
+        while (y < roi.bottom - step) {
+            readRow(above, y - step)
+            readRow(middle, y)
+            readRow(below, y + step)
+            var x = step
+            while (x < rowWidth - step) {
+                val laplacian = 4 * at(middle, x) - at(middle, x - step) - at(middle, x + step) -
+                    at(above, x) - at(below, x)
+                sum += laplacian
+                sumSquares += laplacian.toDouble() * laplacian
+                count++
+                x += step
+            }
+            y += step
+        }
+        if (count == 0) return 0f
+        val mean = sum / count
+        return (sumSquares / count - mean * mean).toFloat()
+    }
+
+    /** [area] (upright coordinates) as a rectangle in the sensor's own orientation, clamped. */
+    private fun toSensorRect(area: Rect?): Rect {
+        val full = Rect(0, 0, image.width, image.height)
+        if (area == null) return full
+        val left = area.left.coerceIn(0, width - 1)
+        val top = area.top.coerceIn(0, height - 1)
+        val right = (area.right - 1).coerceIn(left, width - 1)
+        val bottom = (area.bottom - 1).coerceIn(top, height - 1)
+        // Same turns as the rotation done in toNv21, undone for the two opposite corners.
+        fun toSensor(x: Int, y: Int): Pair<Int, Int> = when (rotationDegrees) {
+            90 -> y to image.height - 1 - x
+            180 -> image.width - 1 - x to image.height - 1 - y
+            270 -> image.width - 1 - y to x
+            else -> x to y
+        }
+        val (x1, y1) = toSensor(left, top)
+        val (x2, y2) = toSensor(right, bottom)
+        val rect = Rect(minOf(x1, x2), minOf(y1, y2), maxOf(x1, x2) + 1, maxOf(y1, y2) + 1)
+        return if (rect.intersect(full)) rect else full
     }
 
     /** The frame as NV21 bytes, rotated upright ([width] x [height]). */
     fun toNv21(): ByteArray {
         val nv21 = yuv420888ToNv21(image)
         return when (rotationDegrees) {
-            90 -> rotateNv21By90(nv21, image.width, image.height)
-            180 -> rotateNv21By180(nv21, image.width, image.height)
-            270 -> rotateNv21By270(nv21, image.width, image.height)
+            90 -> Nv21Rotation.by90(nv21, image.width, image.height)
+            180 -> Nv21Rotation.by180(nv21, image.width, image.height)
+            270 -> Nv21Rotation.by270(nv21, image.width, image.height)
             else -> nv21
         }
     }
@@ -93,7 +133,8 @@ class CameraFrame internal constructor(private val image: ImageProxy) {
             }
         }
 
-        // UV planes (interleaved for NV21: V, U, V, U...)
+        // UV planes (interleaved for NV21: V, U, V, U...). Rows are copied in one go and read from
+        // the array: reading the direct buffer byte by byte is far slower.
         val vPlane = imagePlanes[2]
         val uPlane = imagePlanes[1]
         val vBuffer = vPlane.buffer
@@ -103,70 +144,24 @@ class CameraFrame internal constructor(private val image: ImageProxy) {
         val vPixelStride = vPlane.pixelStride
         val uPixelStride = uPlane.pixelStride
 
+        val vRow = ByteArray(minOf(vBuffer.capacity(), (width / 2 - 1) * vPixelStride + 1))
+        val uRow = ByteArray(minOf(uBuffer.capacity(), (width / 2 - 1) * uPixelStride + 1))
         for (y in 0 until height / 2) {
+            vBuffer.position(y * vRowStride)
+            vBuffer.get(vRow, 0, minOf(vRow.size, vBuffer.remaining()))
+            uBuffer.position(y * uRowStride)
+            uBuffer.get(uRow, 0, minOf(uRow.size, uBuffer.remaining()))
             for (x in 0 until width / 2) {
-                outputBuffer[offset++] = vBuffer.get(y * vRowStride + x * vPixelStride)
-                outputBuffer[offset++] = uBuffer.get(y * uRowStride + x * uPixelStride)
+                outputBuffer[offset++] = vRow[x * vPixelStride]
+                outputBuffer[offset++] = uRow[x * uPixelStride]
             }
         }
 
         return outputBuffer
     }
 
-    private fun rotateNv21By90(data: ByteArray, width: Int, height: Int): ByteArray {
-        val ySize = width * height
-        val rotated = ByteArray(data.size)
-        var k = 0
-        for (i in 0 until width) {
-            for (j in height - 1 downTo 0) {
-                rotated[k++] = data[j * width + i]
-            }
-        }
-        k = ySize
-        for (i in 0 until width step 2) {
-            for (j in height / 2 - 1 downTo 0) {
-                rotated[k++] = data[ySize + j * width + i]
-                rotated[k++] = data[ySize + j * width + i + 1]
-            }
-        }
-        return rotated
-    }
-
-    private fun rotateNv21By180(data: ByteArray, width: Int, height: Int): ByteArray {
-        val ySize = width * height
-        val rotated = ByteArray(data.size)
-        for (i in 0 until ySize) {
-            rotated[ySize - i - 1] = data[i]
-        }
-        for (i in 0 until ySize / 2 step 2) {
-            rotated[ySize + ySize / 2 - i - 2] = data[ySize + i]
-            rotated[ySize + ySize / 2 - i - 1] = data[ySize + i + 1]
-        }
-        return rotated
-    }
-
-    private fun rotateNv21By270(data: ByteArray, width: Int, height: Int): ByteArray {
-        val ySize = width * height
-        val rotated = ByteArray(data.size)
-        var k = 0
-        for (i in width - 1 downTo 0) {
-            for (j in 0 until height) {
-                rotated[k++] = data[j * width + i]
-            }
-        }
-        k = ySize
-        for (i in width - 1 downTo 0 step 2) {
-            for (j in 0 until height / 2) {
-                rotated[k++] = data[ySize + j * width + i - 1]
-                rotated[k++] = data[ySize + j * width + i]
-            }
-        }
-        return rotated
-    }
-
     companion object {
-        const val GRID_COLS = 32
-        const val GRID_ROWS = 24
-        private const val SAMPLES_PER_CELL_SIDE = 4
+        /** Pixels read along the shorter side of the area by [sharpness]. */
+        const val SHARPNESS_SAMPLES = 160
     }
 }

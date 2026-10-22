@@ -47,6 +47,18 @@ object ScannerBitmapUtils {
         }
     }
 
+    /** Bounding box of the points the decoder reported for [result], or null if it gave none. */
+    fun resultBounds(result: Result): Rect? {
+        val points = result.resultPoints
+        if (points == null || points.isEmpty()) return null
+        return Rect(
+            points.minOf { it.x }.toInt(),
+            points.minOf { it.y }.toInt(),
+            points.maxOf { it.x }.toInt(),
+            points.maxOf { it.y }.toInt()
+        )
+    }
+
     /** Pixel area of the preview [cropResultPreview] would produce, without building it. */
     fun previewArea(width: Int, height: Int, result: Result): Int {
         val rect = calculateCropRect(width, height, result)

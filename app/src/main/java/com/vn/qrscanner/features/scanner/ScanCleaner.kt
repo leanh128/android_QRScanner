@@ -1,15 +1,21 @@
 package com.vn.qrscanner.features.scanner
 
 import android.graphics.Bitmap
+import android.graphics.Rect
 import com.google.zxing.BarcodeFormat
 import com.vn.qrscanner.utils.QrCodeType
 import com.vn.qrscanner.utils.QrCodeUtils
 
-/** A code as read from the camera or a picture, before cleaning. */
+/**
+ * A code as read from the camera or a picture, before cleaning: its [text], [format], a [preview]
+ * crop, and where it was in the frame ([location], a bounding box in the upright camera frame;
+ * null for pictures).
+ */
 data class ScannedItem(
     val text: String?,
     val preview: Bitmap? = null,
-    val format: BarcodeFormat? = null
+    val format: BarcodeFormat? = null,
+    val location: Rect? = null
 ) {
     /** Pixel area of the preview; bigger means the code was seen closer/clearer. 0 if none. */
     val quality: Int get() = preview?.let { it.width * it.height } ?: 0
